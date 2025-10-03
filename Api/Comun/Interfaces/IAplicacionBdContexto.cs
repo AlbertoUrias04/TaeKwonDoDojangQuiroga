@@ -13,11 +13,6 @@ public interface IAplicacionBdContexto
     public DbSet<SocioMembresia> SocioMembresias { get; set; }
     public DbSet<Pago> Pagos { get; set; }
     public DbSet<Asistencia> Asistencias { get; set; }
-    public DbSet<Proveedor> Proveedores { get; }
-    public DbSet<Producto> Productos { get; }
-    public DbSet<Venta> Ventas { get; }
-    public DbSet<Cancelacion> Cancelaciones { get; }
-    public DbSet<Reembolso> Reembolsos { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancelacionToken = default);
     int SaveChanges();
