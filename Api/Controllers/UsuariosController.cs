@@ -2,12 +2,13 @@ using Api.Comun.Interfaces;
 using Api.Comun.Modelos.Usuarios;
 using Api.Comun.Utilidades;
 using Api.Entidades;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Api.Controllers;
 
-//[Authorize]
+[Authorize]
 [Route("usuarios")]
 public class UsuariosController: ControllerBase
 {
@@ -33,8 +34,8 @@ public class UsuariosController: ControllerBase
 
         if (string.IsNullOrEmpty(nombre) == false)
         {
-            query = query.Where(x => x.Nombre.Contains(nombre) || 
-                                     x.ApellidoMaterno.Contains(nombre) ||
+            query = query.Where(x => x.Nombre.Contains(nombre) ||
+                                     x.ApellidoPaterno.Contains(nombre) ||
                                      x.ApellidoMaterno.Contains(nombre));
         }
         var lista = await query.ToListAsync();
@@ -87,8 +88,9 @@ public class UsuariosController: ControllerBase
         usuario.ApellidoPaterno = usuarioDto.ApellidoPaterno;
         usuario.ApellidoMaterno = usuarioDto.ApellidoMaterno;
         usuario.NombreUsuario = usuarioDto.NombreUsuario;
-        
-        if (string.IsNullOrEmpty(usuario.Contraseña) == false)
+        usuario.Habilitado = usuarioDto.Habilitado;
+
+        if (string.IsNullOrEmpty(usuarioDto.Contraseña) == false)
         {
             usuario.Contraseña = _hasherServicio.GenerarHash(usuarioDto.Contraseña);
         }

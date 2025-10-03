@@ -10,8 +10,15 @@ import {
   Chip,
   TextField,
   Pagination,
+  CircularProgress,
+  Alert,
+  Box,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
+import { Search, Clear } from "@mui/icons-material";
 import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
 import api from "../../services/api";
 import ModalCrearUsuario from "../../Components/modals/ModalCrearUsuario";
 import ModalEditarUsuario from "../../Components/modals/ModalEditarUsuario";
@@ -25,13 +32,40 @@ export default function Usuarios() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [modalEditarAbierto, setModalEditarAbierto] = useState(false);
   const [usuarioEditar, setUsuarioEditar] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(null);
 
   const itemsPorPagina = 5;
 
-  const cargarUsuarios = () => {
-    api.get("/usuarios").then((res) => {
-      setUsuarios(res.data);
-    });
+  const cargarUsuarios = async () => {
+    setCargando(true);
+    setError(null);
+    
+    try {
+      const res = await api.get("/usuarios");
+      setUsuarios(res.data || []);
+    } catch (error) {
+      console.error("Error al cargar usuarios:", error);
+      
+      let mensajeError = "Ocurrió un error inesperado al cargar los usuarios.";
+      
+      if (error.response) {
+        mensajeError = "Error al cargar los usuarios del servidor.";
+      } else if (error.request) {
+        mensajeError = "No se pudo conectar con el servidor. Verifica tu conexión.";
+      }
+      
+      setError(mensajeError);
+      
+      Swal.fire({
+        icon: "error",
+        title: "Error al cargar usuarios",
+        text: mensajeError,
+        confirmButtonColor: "#d32f2f",
+      });
+    } finally {
+      setCargando(false);
+    }
   };
 
   useEffect(() => {
@@ -59,37 +93,153 @@ export default function Usuarios() {
     setModalEditarAbierto(true);
   };
 
-  const eliminarUsuario = async (slug) => {
-    const confirmacion = window.confirm(
-      "�Est�s seguro de deshabilitar este usuario?"
-    );
-    if (!confirmacion) return;
+  const eliminarUsuario = async (usuario) => {
+    const resultado = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: `Se deshabilitará al usuario ${usuario.nombre} ${usuario.apellidoPaterno}`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d32f2f",
+      cancelButtonColor: "#757575",
+      confirmButtonText: "Sí, deshabilitar",
+      cancelButtonText: "Cancelar",
+      reverseButtons: true,
+    });
+
+    if (!resultado.isConfirmed) return;
 
     try {
-      await api.patch(`/usuarios/${slug}`, {
-        slug, // lo env�as tambi�n en el cuerpo
+      await api.patch(`/usuarios/${usuario.slug}`, {
+        slug: usuario.slug,
         habilitado: false,
       });
+      
+      await Swal.fire({
+        icon: "success",
+        title: "Usuario deshabilitado",
+        text: "El usuario ha sido deshabilitado correctamente",
+        confirmButtonColor: "#d32f2f",
+        timer: 2000,
+        timerProgressBar: true,
+      });
+      
       cargarUsuarios();
     } catch (error) {
-      alert("Error al deshabilitar el usuario");
-      console.error(error);
+      console.error("Error al deshabilitar el usuario:", error);
+      
+      let mensajeError = "Ocurrió un error al deshabilitar el usuario";
+      
+      if (error.response) {
+        if (error.response.status === 404) {
+          mensajeError = "Usuario no encontrado";
+        } else {
+          mensajeError = "Error al deshabilitar el usuario en el servidor";
+        }
+      } else if (error.request) {
+        mensajeError = "No se pudo conectar con el servidor. Verifica tu conexión.";
+      }
+      
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: mensajeError,
+        confirmButtonColor: "#d32f2f",
+      });
     }
   };
+
+  const handleGuardadoExitoso = async () => {
+    await Swal.fire({
+      icon: "success",
+      title: "Usuario creado",
+      text: "El usuario ha sido creado correctamente",
+      confirmButtonColor: "#d32f2f",
+      timer: 2000,
+      timerProgressBar: true,
+    });
+    cargarUsuarios();
+  };
+
+  const handleActualizadoExitoso = async () => {
+    await Swal.fire({
+      icon: "success",
+      title: "Usuario actualizado",
+      text: "El usuario ha sido actualizado correctamente",
+      confirmButtonColor: "#d32f2f",
+      timer: 2000,
+      timerProgressBar: true,
+    });
+    cargarUsuarios();
+  };
+
+  const limpiarFiltro = () => {
+    setFiltro("");
+  };
+
+  const recargarDatos = async () => {
+    await cargarUsuarios();
+    
+    if (!error) {
+      Swal.fire({
+        icon: "success",
+        title: "Datos actualizados",
+        text: "Los datos se han recargado correctamente",
+        confirmButtonColor: "#d32f2f",
+        timer: 1500,
+        timerProgressBar: true,
+        showConfirmButton: false,
+      });
+    }
+  };
+
+  if (cargando) {
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+        flexDirection="column"
+        gap={2}
+      >
+        <CircularProgress size={60} />
+        <p>Cargando usuarios...</p>
+      </Box>
+    );
+  }
 
   return (
     <div className="page-container">
       <div className="header">
         <h1>Usuarios</h1>
-        <Button
-          className="botonVentas"
-          variant="contained"
-          color="primary"
-          onClick={() => setModalAbierto(true)}
-        >
-          Nuevo
-        </Button>
+        <Box display="flex" gap={1}>
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={recargarDatos}
+          >
+            Recargar
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => setModalAbierto(true)}
+            sx={{
+              backgroundColor: "#d32f2f",
+              "&:hover": {
+                backgroundColor: "#b71c1c",
+              },
+            }}
+          >
+            Nuevo
+          </Button>
+        </Box>
       </div>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
 
       <div className="search-bar">
         <TextField
@@ -98,6 +248,20 @@ export default function Usuarios() {
           fullWidth
           value={filtro}
           onChange={(e) => setFiltro(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search />
+              </InputAdornment>
+            ),
+            endAdornment: filtro && (
+              <InputAdornment position="end">
+                <IconButton onClick={limpiarFiltro} size="small">
+                  <Clear />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
         />
       </div>
 
@@ -127,7 +291,7 @@ export default function Usuarios() {
           </TableHead>
           <TableBody>
             {usuariosPaginados.map((u) => (
-              <TableRow key={u.slug}>
+              <TableRow key={u.slug} hover>
                 <TableCell>{u.nombre}</TableCell>
                 <TableCell>{u.apellidoPaterno}</TableCell>
                 <TableCell>{u.apellidoMaterno}</TableCell>
@@ -141,11 +305,15 @@ export default function Usuarios() {
                 </TableCell>
                 <TableCell align="center" className="actions-cell">
                   <Button
-                    className="botonVentas"
                     variant="contained"
                     size="small"
-                    color="primary"
                     onClick={() => abrirEditar(u)}
+                    sx={{
+                      backgroundColor: "#d32f2f",
+                      "&:hover": {
+                        backgroundColor: "#b71c1c",
+                      },
+                    }}
                   >
                     Editar
                   </Button>
@@ -153,9 +321,10 @@ export default function Usuarios() {
                     variant="outlined"
                     size="small"
                     color="error"
-                    onClick={() => eliminarUsuario(u.slug)}
+                    onClick={() => eliminarUsuario(u)}
+                    disabled={!u.habilitado}
                   >
-                    Eliminar
+                    Deshabilitar
                   </Button>
                 </TableCell>
               </TableRow>
@@ -163,7 +332,9 @@ export default function Usuarios() {
             {usuariosPaginados.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} align="center">
-                  No hay usuarios.
+                  {filtro
+                    ? "No se encontraron usuarios con ese criterio de búsqueda"
+                    : "No hay usuarios registrados"}
                 </TableCell>
               </TableRow>
             )}
@@ -176,19 +347,30 @@ export default function Usuarios() {
           count={Math.ceil(filtrados.length / itemsPorPagina)}
           page={pagina}
           onChange={(e, value) => setPagina(value)}
-          color="primary"
+          showFirstButton
+          showLastButton
+          sx={{
+            "& .MuiPaginationItem-root.Mui-selected": {
+              backgroundColor: "#d32f2f",
+              color: "white",
+              "&:hover": {
+                backgroundColor: "#b71c1c",
+              },
+            },
+          }}
         />
       </div>
+
       <ModalCrearUsuario
         abierto={modalAbierto}
         onClose={() => setModalAbierto(false)}
-        onGuardado={cargarUsuarios}
+        onGuardado={handleGuardadoExitoso}
       />
       <ModalEditarUsuario
         abierto={modalEditarAbierto}
         onClose={() => setModalEditarAbierto(false)}
         usuario={usuarioEditar}
-        onActualizado={cargarUsuarios}
+        onActualizado={handleActualizadoExitoso}
       />
     </div>
   );

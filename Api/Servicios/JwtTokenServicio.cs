@@ -26,7 +26,7 @@ public class JwtTokenServicio : ITokenIdentidadServicio
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Expires = reclamos.EsPersistente
-                ? DateTime.MaxValue
+                ? DateTime.UtcNow.AddDays(30)
                 : DateTime.UtcNow.AddDays(1),
             Subject = new ClaimsIdentity(new[]
             {
@@ -74,7 +74,7 @@ public class JwtTokenServicio : ITokenIdentidadServicio
         var fechaLimite = DateTime.Now.AddMinutes(-_identidadAjustes.Expiracion);
 
         var correcto = reclamos.EstampaSeguridad == _identidadAjustes.EstampaSeguridad &&
-                       (reclamos.EsPersistente || reclamos.Fecha < fechaLimite);
+                       (reclamos.EsPersistente || reclamos.Fecha > fechaLimite);
 
         return await Task.FromResult(correcto);
     }

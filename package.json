@@ -1,11 +1,12 @@
 {
-  "name": "proyectofarmacia",
+  "name": "control-fitness-gym",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@hookform/resolvers": "^5.0.1",
+    "@mui/icons-material": "^7.3.3",
     "@mui/material": "^7.1.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
@@ -22,6 +23,7 @@
     "react-router-dom": "^7.6.1",
     "react-scripts": "5.0.1",
     "styled-components": "^6.1.18",
+    "sweetalert2": "^11.23.0",
     "web-vitals": "^2.1.4",
     "yup": "^1.6.1"
   },

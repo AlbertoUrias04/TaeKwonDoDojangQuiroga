@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet --version)",
+      "Bash(dotnet ef dbcontext:*)",
+      "Bash(dotnet run:*)",
+      "Bash(dotnet script:*)",
+      "Bash(dotnet ef migrations:*)",
+      "Read(//c/Users/Hector/Documents/GitHub/**)",
+      "Read(//c/Users/Hector/Desktop/**)",
+      "Bash(rm:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

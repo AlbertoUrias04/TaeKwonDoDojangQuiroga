@@ -1,75 +1,117 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import ronnieImage from '../../Components/img/ronnie.jpg'; 
 import './Login.css';
 
 const Login = () => {
+
     const [usuarioNombre, setUsuarioNombre] = useState("");
     const [contrasena, setContrasena] = useState("");
     const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+        setLoading(true);
+        setError(null);
         try {
             const data = {
-                usuarioNombre: usuarioNombre,   // que coincida con el DTO backend
-                contrasena: contrasena,
-                mantenerSesion: true
+                UsuarioNombre: usuarioNombre,
+                Contrasena: contrasena,
+                MantenerSesion: true
             };
 
-            console.log("Datos enviados al login:", data);
-            // Llama a la API con POST a /login
             const res = await api.post("/login", data);
+            const token = res.headers.authorization || res.headers.Authorization;
 
-            // Suponiendo que el token viene en res.data.token
-            const token = res.headers.authorization;
-            if (!token) throw new Error("Token no recibido");
+            if (!token) {
+                throw new Error("Token no recibido");
+            }
             localStorage.setItem("token", token);
-
-            // Navegamos a Usuarios
             navigate("/usuarios");
         } catch (err) {
-            console.error("Error al iniciar sesion:", err);
-
-            if (err.response) {
-                console.log("Respuesta del servidor:", err.response);
-                console.log("Código de estado:", err.response.status);
-                console.log("Datos del error:", err.response.data);
-            }
-
-            setError("Usuario o contrasena incorrectos");
+            setError("Usuario o contraseña incorrectos");
+        } finally {
+            setLoading(false);
         }
+        return false;
     };
 
     return (
-        <div className="login-container">
-            <h2>Acceso para empleados</h2>
-            <form className="login-form" onSubmit={handleSubmit}>
-                <div>
-                    <label>Nombre de Usuario:</label>
-                    <input
-                        type="text"
-                        placeholder="Ingresa tu ID"
-                        required
-                        value={usuarioNombre}
-                        onChange={(e) => setUsuarioNombre(e.target.value)}
-                    />
+   
+        <div 
+            className="login-wrapper" 
+            style={{ '--background-image': `url(${ronnieImage})` }}
+        >
+            <div className="login-container">
+                <div className="login-header">
+                    <div className="login-icon">
+                        <i className="bi bi-person-circle"></i>
+                    </div>
+                    <h2>Control Fitness</h2>
+                    <p className="login-subtitle">Acceso para empleados</p>
                 </div>
-                <div>
-                    <label>Contrasena:</label>
-                    <input
-                        type="password"
-                        placeholder="Ingresa tu contrasena"
-                        required
-                        value={contrasena}
-                        onChange={(e) => setContrasena(e.target.value)}
-                    />
-                </div>
-                {error && <p style={{ color: "red" }}>{error}</p>}
-                <button type="submit">Iniciar sesion</button>
-            </form>
+
+                <form className="login-form" onSubmit={handleSubmit} noValidate>
+
+                    <div className="mb-4">
+                        <label htmlFor="usuario" className="form-label">
+                            <i className="bi bi-person-fill me-2"></i>
+                            Nombre de Usuario
+                        </label>
+                        <input
+                            type="text"
+                            className="form-control form-control-lg"
+                            id="usuario"
+                            placeholder="Ingresa tu usuario"
+                            required
+                            value={usuarioNombre}
+                            onChange={(e) => setUsuarioNombre(e.target.value)}
+                            disabled={loading}
+                            autoComplete="username"
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <label htmlFor="contrasena" className="form-label">
+                            <i className="bi bi-lock-fill me-2"></i>
+                            Contraseña
+                        </label>
+                        <input
+                            type="password"
+                            className="form-control form-control-lg"
+                            id="contrasena"
+                            placeholder="Ingresa tu contraseña"
+                            required
+                            value={contrasena}
+                            onChange={(e) => setContrasena(e.target.value)}
+                            disabled={loading}
+                            autoComplete="current-password"
+                        />
+                    </div>
+                    {error && (
+                        <div className="alert alert-danger" role="alert">
+                            <i className="bi bi-exclamation-triangle-fill"></i>
+                            <div>{error}</div>
+                        </div>
+                    )}
+                    <button
+                        type="submit"
+                        className="btn btn-primary btn-lg w-100"
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <>
+                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Iniciando sesión...
+                            </>
+                        ) : (
+                            "Iniciar Sesión"
+                        )}
+                    </button>
+                </form>
+            </div>
         </div>
     );
 };

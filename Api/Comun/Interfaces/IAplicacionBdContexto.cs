@@ -8,6 +8,11 @@ public interface IAplicacionBdContexto
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<SesionUsuario> SesionesUsuario { get; set; }
     public DbSet<Sucursal> Sucursales { get; }
+    public DbSet<Socio> Socios { get; set; }
+    public DbSet<Membresia> Membresias { get; set; }
+    public DbSet<SocioMembresia> SocioMembresias { get; set; }
+    public DbSet<Pago> Pagos { get; set; }
+    public DbSet<Asistencia> Asistencias { get; set; }
     public DbSet<Proveedor> Proveedores { get; }
     public DbSet<Producto> Productos { get; }
     public DbSet<Venta> Ventas { get; }

@@ -10,24 +10,30 @@ namespace Api.Servicios;
 public class UsuarioSesionServicio : IUsuariosSesionServicio
 {
     private readonly IAplicacionBdContexto _contexto;
+    private readonly IHasherServicio _hasherServicio;
 
-    public UsuarioSesionServicio(IAplicacionBdContexto contexto)
+    public UsuarioSesionServicio(IAplicacionBdContexto contexto, IHasherServicio hasherServicio)
     {
         _contexto = contexto;
+        _hasherServicio = hasherServicio;
     }
 
     public async Task<SesionUsuario?> IniciarSesionAsync(IniciarSesionVm inicioSesion, CancellationToken cancelacionToken)
     {
-        // Buscar usuario directamente por usuario y contraseña (texto plano)
+        // Buscar usuario por nombre de usuario
         var usuario = await _contexto.Usuarios
             .FirstOrDefaultAsync(u =>
                 u.NombreUsuario == inicioSesion.UsuarioNombre &&
-                u.Contraseña == inicioSesion.Contrasena &&
                 u.Habilitado,
                 cancelacionToken);
 
         // Si no lo encontró, regresar null
         if (usuario == null)
+            return null;
+
+        // Verificar contraseña hasheada
+        var contraseñaHasheada = _hasherServicio.GenerarHash(inicioSesion.Contrasena);
+        if (usuario.Contraseña != contraseñaHasheada)
             return null;
 
         // Crear nueva sesión

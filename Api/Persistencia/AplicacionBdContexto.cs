@@ -14,14 +14,17 @@ public class AplicacionBdContexto : DbContext, IAplicacionBdContexto
     public AplicacionBdContexto(DbContextOptions opciones) : base(opciones)
     {
     }
+    // Entidades del sistema de autenticación
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<SesionUsuario> SesionesUsuario { get; set; }
+
+    // Entidades del gimnasio
     public DbSet<Sucursal> Sucursales { get; set; }
-    public DbSet<Proveedor> Proveedores { get; set; }
-    public DbSet<Producto> Productos { get; set; }
-    public DbSet<Venta> Ventas { get; set; }
-    public DbSet<Cancelacion> Cancelaciones { get; set; }
-    public DbSet<Reembolso> Reembolsos { get; set; }
+    public DbSet<Socio> Socios { get; set; }
+    public DbSet<Membresia> Membresias { get; set; }
+    public DbSet<SocioMembresia> SocioMembresias { get; set; }
+    public DbSet<Pago> Pagos { get; set; }
+    public DbSet<Asistencia> Asistencias { get; set; }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancelacionToken = default)
     {
@@ -104,12 +107,6 @@ public class AplicacionBdContexto : DbContext, IAplicacionBdContexto
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-        modelBuilder.ApplyConfiguration(new SucursalConfiguracion());
-        modelBuilder.ApplyConfiguration(new ProveedorConfiguracion());
-        modelBuilder.ApplyConfiguration(new ProductoConfiguracion());
-        modelBuilder.ApplyConfiguration(new VentaConfiguracion());
-        modelBuilder.ApplyConfiguration(new CancelacionConfiguracion());
-        modelBuilder.ApplyConfiguration(new ReembolsoConfiguracion());
 
         base.OnModelCreating(modelBuilder);
     }

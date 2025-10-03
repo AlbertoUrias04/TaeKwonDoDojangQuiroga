@@ -1,11 +1,13 @@
 using Api.Comun.Interfaces;
 using Api.Comun.Modelos.Sucursales;
 using Api.Entidades;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Api.Controllers;
 
+[Authorize]
 [Route("sucursales")]
 public class SucursalesController : ControllerBase
 {
@@ -36,6 +38,7 @@ public class SucursalesController : ControllerBase
 
 		return lista.Select(s => new BuscarSucursalDto
 		{
+			Id = s.Id,
 			Nombre = s.Nombre,
 			Direccion = s.Direccion,
 			Slug = s.Slug,
@@ -53,6 +56,7 @@ public class SucursalesController : ControllerBase
 
 		return new BuscarSucursalDto
 		{
+			Id = sucursal.Id,
 			Nombre = sucursal.Nombre,
 			Direccion = sucursal.Direccion,
 			Slug = sucursal.Slug,
@@ -92,6 +96,7 @@ public class SucursalesController : ControllerBase
 
 		return new BuscarSucursalDto
 		{
+			Id = sucursal.Id,
 			Nombre = sucursal.Nombre,
 			Direccion = sucursal.Direccion,
 			Slug = sucursal.Slug,

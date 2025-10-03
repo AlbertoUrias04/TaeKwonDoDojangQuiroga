@@ -83,29 +83,29 @@ builder.Services.AddAuthentication(auth =>
         RequireExpirationTime = false,
         ClockSkew = TimeSpan.Zero,
     };
-    opt.Events = new JwtBearerEvents
-    {
-        OnTokenValidated = async (contexto) =>
-        {
-            var tokenIdentidadServicio = contexto.HttpContext.RequestServices
-                .GetRequiredService<ITokenIdentidadServicio>();
-
-            var tokenJwt = contexto.SecurityToken as JwtSecurityToken;
-            if (tokenJwt == null)
-            {
-                contexto.Fail("Token no válido.");
-                return;
-            }
-
-            var reclamos = tokenIdentidadServicio.ObtenerReclamos(tokenJwt.Claims);
-
-            var tokenValido = await tokenIdentidadServicio.ValidarAsync(reclamos);
-            if (tokenValido == false)
-            {
-                contexto.Fail("Token expirado/invlido.");
-            }
-        }
-    };
+//     opt.Events = new JwtBearerEvents
+//     {
+//         OnTokenValidated = async (contexto) =>
+//         {
+//             var tokenIdentidadServicio = contexto.HttpContext.RequestServices
+//                 .GetRequiredService<ITokenIdentidadServicio>();
+// 
+//             var tokenJwt = contexto.SecurityToken as JwtSecurityToken;
+//             if (tokenJwt == null)
+//             {
+//                 contexto.Fail("Token no válido.");
+//                 return;
+//             }
+// 
+//             var reclamos = tokenIdentidadServicio.ObtenerReclamos(tokenJwt.Claims);
+// 
+//             var tokenValido = await tokenIdentidadServicio.ValidarAsync(reclamos);
+//             if (tokenValido == false)
+//             {
+//                 contexto.Fail("Token expirado/invlido.");
+//             }
+//         }
+//     };
 });
 
 var app = builder.Build();
