@@ -1,0 +1,20 @@
+
+
+.btn-agregar {
+    background-color: #28a745; /* Verde */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.btn-agregar:hover {
+    background-color: #218838;
+}
+
+.tabla-container {
+    overflow-x: auto; 
+}
