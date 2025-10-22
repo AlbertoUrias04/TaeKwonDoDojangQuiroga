@@ -14,11 +14,16 @@ import {
   Box,
   InputAdornment,
   IconButton,
-  Card,
-  CardContent,
   Grid,
+  Tabs,
+  Tab,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Pagination,
 } from "@mui/material";
-import { Search, Clear, Add, FitnessCenter } from "@mui/icons-material";
+import { Search, Clear, Add } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import api from "../../services/api";
@@ -35,16 +40,20 @@ export default function Membresias() {
   const [membresiaEditar, setMembresiaEditar] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
+  const [tipoFiltro, setTipoFiltro] = useState("Todos");
+  const [estadoFiltro, setEstadoFiltro] = useState("Todos");
+  const [pagina, setPagina] = useState(1);
+  const itemsPorPagina = 10;
 
   const cargarMembresias = async () => {
     setCargando(true);
     setError(null);
 
     try {
-      const res = await api.get("/membresias");
+      const res = await api.get("/conceptos");
       setMembresias(res.data || []);
     } catch (error) {
-      console.error("Error al cargar membresías:", error);
+      console.error("Error al cargar conceptos:", error);
 
       let mensajeError = "Ocurrió un error inesperado al cargar las membresías.";
 
@@ -73,23 +82,50 @@ export default function Membresias() {
   }, []);
 
   useEffect(() => {
-    const datosFiltrados = membresias.filter((m) =>
-      m.nombre.toLowerCase().includes(filtro.toLowerCase())
-    );
+    let datosFiltrados = membresias;
+
+    // Filtro por texto
+    if (filtro) {
+      datosFiltrados = datosFiltrados.filter((m) =>
+        m.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
+        (m.descripcion && m.descripcion.toLowerCase().includes(filtro.toLowerCase()))
+      );
+    }
+
+    // Filtro por tipo
+    if (tipoFiltro !== "Todos") {
+      datosFiltrados = datosFiltrados.filter((m) => m.tipoConcepto === tipoFiltro);
+    }
+
+    // Filtro por estado
+    if (estadoFiltro !== "Todos") {
+      datosFiltrados = datosFiltrados.filter((m) =>
+        estadoFiltro === "Activos" ? m.activo : !m.activo
+      );
+    }
+
     setFiltrados(datosFiltrados);
-  }, [filtro, membresias]);
+    setPagina(1);
+  }, [filtro, membresias, tipoFiltro, estadoFiltro]);
+
+  const tiposUnicos = ["Todos", ...new Set(membresias.map((m) => m.tipoConcepto))];
+
+  const indiceInicio = (pagina - 1) * itemsPorPagina;
+  const indiceFin = indiceInicio + itemsPorPagina;
+  const datosPaginados = filtrados.slice(indiceInicio, indiceFin);
+  const totalPaginas = Math.ceil(filtrados.length / itemsPorPagina);
 
   const cambiarEstado = async (slug, nuevoEstado) => {
     try {
       if (nuevoEstado) {
         // Activar
-        await api.put(`/membresias/${slug}`, {
+        await api.put(`/conceptos/${slug}`, {
           ...membresias.find((m) => m.slug === slug),
-          activa: nuevoEstado,
+          activo: nuevoEstado,
         });
       } else {
         // Desactivar
-        await api.delete(`/membresias/${slug}`);
+        await api.delete(`/conceptos/${slug}`);
       }
 
       Swal.fire({
@@ -115,6 +151,48 @@ export default function Membresias() {
     setModalEditarAbierto(true);
   };
 
+  const confirmarEliminar = (membresia) => {
+    Swal.fire({
+      title: "¿Eliminar concepto?",
+      text: `¿Estás seguro de eliminar "${membresia.nombre}"? Esta acción solo desactivará el concepto.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d32f2f",
+      cancelButtonColor: "#666",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await api.delete(`/conceptos/${membresia.slug}`);
+          Swal.fire({
+            icon: "success",
+            title: "Concepto eliminado",
+            text: "El concepto se ha desactivado exitosamente",
+            confirmButtonColor: "#d32f2f",
+          });
+          cargarMembresias();
+        } catch (error) {
+          console.error("Error al eliminar concepto:", error);
+          let mensajeError = "No se pudo eliminar el concepto";
+
+          if (error.response?.status === 404) {
+            mensajeError = "Concepto no encontrado";
+          } else if (error.response?.status === 400) {
+            mensajeError = error.response.data?.mensaje || "No se puede eliminar el concepto";
+          }
+
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: mensajeError,
+            confirmButtonColor: "#d32f2f",
+          });
+        }
+      }
+    });
+  };
+
   const getDuracionTexto = (dias) => {
     if (dias === 1) return "1 día";
     if (dias === 7) return "1 semana";
@@ -135,7 +213,7 @@ export default function Membresias() {
           mb: 3,
         }}
       >
-        <h1 className="page-title">Gestión de Membresías</h1>
+        <h1 className="page-title">Gestión de Conceptos</h1>
         <Button
           variant="contained"
           startIcon={<Add />}
@@ -147,33 +225,84 @@ export default function Membresias() {
             },
           }}
         >
-          Nueva Membresía
+          Nuevo Concepto
         </Button>
       </Box>
 
-      <Box sx={{ mb: 3 }}>
-        <TextField
-          placeholder="Buscar membresía por nombre..."
-          variant="outlined"
-          size="small"
-          fullWidth
-          value={filtro}
-          onChange={(e) => setFiltro(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search />
-              </InputAdornment>
-            ),
-            endAdornment: filtro && (
-              <InputAdornment position="end">
-                <IconButton onClick={() => setFiltro("")} edge="end">
-                  <Clear />
-                </IconButton>
-              </InputAdornment>
-            ),
+      <Paper elevation={2} sx={{ mb: 3, p: 2 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} md={6}>
+            <TextField
+              placeholder="Buscar concepto por nombre o descripción..."
+              variant="outlined"
+              size="small"
+              fullWidth
+              value={filtro}
+              onChange={(e) => setFiltro(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search />
+                  </InputAdornment>
+                ),
+                endAdornment: filtro && (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => setFiltro("")} edge="end" size="small">
+                      <Clear />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Estado</InputLabel>
+              <Select
+                value={estadoFiltro}
+                label="Estado"
+                onChange={(e) => setEstadoFiltro(e.target.value)}
+              >
+                <MenuItem value="Todos">Todos</MenuItem>
+                <MenuItem value="Activos">Activos</MenuItem>
+                <MenuItem value="Inactivos">Inactivos</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Chip
+                label={`${filtrados.length} concepto${filtrados.length !== 1 ? 's' : ''}`}
+                color="primary"
+                variant="outlined"
+              />
+            </Box>
+          </Grid>
+        </Grid>
+      </Paper>
+
+      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+        <Tabs
+          value={tipoFiltro}
+          onChange={(e, newValue) => setTipoFiltro(newValue)}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{
+            "& .MuiTab-root": {
+              minWidth: 100,
+            },
+            "& .Mui-selected": {
+              color: "#d32f2f !important",
+            },
+            "& .MuiTabs-indicator": {
+              backgroundColor: "#d32f2f",
+            },
           }}
-        />
+        >
+          {tiposUnicos.map((tipo) => (
+            <Tab key={tipo} label={tipo} value={tipo} />
+          ))}
+        </Tabs>
       </Box>
 
       {error && (
@@ -188,114 +317,15 @@ export default function Membresias() {
         </Box>
       ) : (
         <>
-          <Grid container spacing={3} sx={{ mb: 3 }}>
-            {filtrados.map((membresia) => (
-              <Grid item xs={12} sm={6} md={4} key={membresia.slug}>
-                <Card
-                  elevation={3}
-                  sx={{
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    borderTop: membresia.activa
-                      ? "4px solid #d32f2f"
-                      : "4px solid #9e9e9e",
-                  }}
-                >
-                  <CardContent sx={{ flexGrow: 1 }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        mb: 2,
-                      }}
-                    >
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <h3 style={{ margin: 0 }}>{membresia.nombre}</h3>
-                      </Box>
-                      <Chip
-                        label={membresia.activa ? "Activa" : "Inactiva"}
-                        color={membresia.activa ? "success" : "default"}
-                        size="small"
-                      />
-                    </Box>
-
-                    <Box sx={{ mb: 2 }}>
-                      <p
-                        style={{
-                          fontSize: "2rem",
-                          fontWeight: "bold",
-                          color: "#d32f2f",
-                          margin: 0,
-                        }}
-                      >
-                        ${membresia.precio.toLocaleString("es-MX")}
-                      </p>
-                      <p style={{ color: "#666", margin: 0 }}>
-                        {getDuracionTexto(membresia.duracionDias)}
-                      </p>
-                    </Box>
-
-                    {membresia.descripcion && (
-                      <p
-                        style={{
-                          fontSize: "0.9rem",
-                          color: "#666",
-                          marginBottom: "1rem",
-                        }}
-                      >
-                        {membresia.descripcion}
-                      </p>
-                    )}
-
-                    <Box
-                      sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}
-                    >
-                      <Button
-                        variant="contained"
-                        size="small"
-                        onClick={() => abrirModalEditar(membresia)}
-                        sx={{
-                          backgroundColor: "#d32f2f",
-                          "&:hover": {
-                            backgroundColor: "#b71c1c",
-                          },
-                        }}
-                      >
-                        Editar
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        color={membresia.activa ? "error" : "success"}
-                        size="small"
-                        onClick={() =>
-                          cambiarEstado(membresia.slug, !membresia.activa)
-                        }
-                      >
-                        {membresia.activa ? "Desactivar" : "Activar"}
-                      </Button>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-
-            {filtrados.length === 0 && (
-              <Grid item xs={12}>
-                <Alert severity="info">
-                  No se encontraron membresías
-                </Alert>
-              </Grid>
-            )}
-          </Grid>
-
-          <TableContainer component={Paper} elevation={3} sx={{ mt: 3 }}>
+          <TableContainer component={Paper} elevation={3}>
             <Table>
               <TableHead>
                 <TableRow sx={{ backgroundColor: "#d32f2f" }}>
                   <TableCell sx={{ color: "white", fontWeight: "bold" }}>
                     Nombre
+                  </TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                    Tipo
                   </TableCell>
                   <TableCell sx={{ color: "white", fontWeight: "bold" }}>
                     Precio
@@ -320,14 +350,22 @@ export default function Membresias() {
               <TableBody>
                 {filtrados.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} align="center">
-                      No se encontraron membresías
+                    <TableCell colSpan={7} align="center">
+                      No se encontraron conceptos
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filtrados.map((membresia) => (
+                  datosPaginados.map((membresia) => (
                     <TableRow key={membresia.slug} hover>
                       <TableCell>{membresia.nombre}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={membresia.tipoConcepto}
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                        />
+                      </TableCell>
                       <TableCell>
                         ${membresia.precio.toLocaleString("es-MX")}
                       </TableCell>
@@ -337,8 +375,8 @@ export default function Membresias() {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={membresia.activa ? "Activa" : "Inactiva"}
-                          color={membresia.activa ? "success" : "default"}
+                          label={membresia.activo ? "Activo" : "Inactivo"}
+                          color={membresia.activo ? "success" : "default"}
                           size="small"
                         />
                       </TableCell>
@@ -365,13 +403,11 @@ export default function Membresias() {
                           </Button>
                           <Button
                             variant="outlined"
-                            color={membresia.activa ? "error" : "success"}
+                            color="error"
                             size="small"
-                            onClick={() =>
-                              cambiarEstado(membresia.slug, !membresia.activa)
-                            }
+                            onClick={() => confirmarEliminar(membresia)}
                           >
-                            {membresia.activa ? "Desactivar" : "Activar"}
+                            Eliminar
                           </Button>
                         </Box>
                       </TableCell>
@@ -381,6 +417,26 @@ export default function Membresias() {
               </TableBody>
             </Table>
           </TableContainer>
+
+          {totalPaginas > 1 && (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+              <Pagination
+                count={totalPaginas}
+                page={pagina}
+                onChange={(e, val) => setPagina(val)}
+                color="primary"
+                sx={{
+                  "& .MuiPaginationItem-root.Mui-selected": {
+                    backgroundColor: "#d32f2f",
+                    color: "white",
+                    "&:hover": {
+                      backgroundColor: "#b71c1c",
+                    },
+                  },
+                }}
+              />
+            </Box>
+          )}
         </>
       )}
 

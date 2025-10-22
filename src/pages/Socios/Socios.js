@@ -15,8 +15,16 @@ import {
   Box,
   InputAdornment,
   IconButton,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Typography,
 } from "@mui/material";
-import { Search, Clear, PersonAdd } from "@mui/icons-material";
+import { Search, Clear, PersonAdd, FilterList, ExpandMore } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import api from "../../services/api";
@@ -35,6 +43,19 @@ export default function Socios() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
 
+  // Filtros avanzados
+  const [filtroEstado, setFiltroEstado] = useState("");
+  const [filtroCinta, setFiltroCinta] = useState("");
+  const [filtroClase, setFiltroClase] = useState("");
+  const [filtroMensualidad, setFiltroMensualidad] = useState("");
+  const [filtroEdadMin, setFiltroEdadMin] = useState("");
+  const [filtroEdadMax, setFiltroEdadMax] = useState("");
+
+  // Datos para filtros
+  const [cintas, setCintas] = useState([]);
+  const [clases, setClases] = useState([]);
+  const [conceptos, setConceptos] = useState([]);
+
   const itemsPorPagina = 10;
 
   const cargarSocios = async () => {
@@ -42,15 +63,15 @@ export default function Socios() {
     setError(null);
 
     try {
-      const res = await api.get("/socios");
+      const res = await api.get("/alumnos");
       setSocios(res.data || []);
     } catch (error) {
-      console.error("Error al cargar socios:", error);
+      console.error("Error al cargar alumnos:", error);
 
-      let mensajeError = "Ocurrió un error inesperado al cargar los socios.";
+      let mensajeError = "Ocurrió un error inesperado al cargar los alumnos.";
 
       if (error.response) {
-        mensajeError = "Error al cargar los socios del servidor.";
+        mensajeError = "Error al cargar los alumnos del servidor.";
       } else if (error.request) {
         mensajeError = "No se pudo conectar con el servidor. Verifica tu conexión.";
       }
@@ -59,7 +80,7 @@ export default function Socios() {
 
       Swal.fire({
         icon: "error",
-        title: "Error al cargar socios",
+        title: "Error al cargar alumnos",
         text: mensajeError,
         confirmButtonColor: "#d32f2f",
       });
@@ -68,20 +89,104 @@ export default function Socios() {
     }
   };
 
+  const cargarDatosFiltros = async () => {
+    try {
+      const [resCintas, resClases, resConceptos] = await Promise.all([
+        api.get("/cintas?activo=true"),
+        api.get("/clases?activo=true"),
+        api.get("/conceptos?activo=true&tipoConcepto=Mensualidad"),
+      ]);
+
+      console.log("Cintas cargadas:", resCintas.data);
+      console.log("Clases cargadas:", resClases.data);
+      console.log("Conceptos cargados:", resConceptos.data);
+
+      setCintas(resCintas.data || []);
+      setClases(resClases.data || []);
+      setConceptos(resConceptos.data || []);
+    } catch (error) {
+      console.error("Error al cargar datos de filtros:", error);
+    }
+  };
+
   useEffect(() => {
     cargarSocios();
+    cargarDatosFiltros();
   }, []);
 
   useEffect(() => {
-    const datosFiltrados = socios.filter((s) =>
-      [s.nombre, s.apellidoPaterno, s.apellidoMaterno, s.email]
-        .join(" ")
-        .toLowerCase()
-        .includes(filtro.toLowerCase())
-    );
+    let datosFiltrados = socios;
+
+    // Filtro de texto
+    if (filtro) {
+      datosFiltrados = datosFiltrados.filter((s) =>
+        [s.nombre, s.apellidoPaterno, s.apellidoMaterno, s.nombreTutor, s.emailTutor]
+          .join(" ")
+          .toLowerCase()
+          .includes(filtro.toLowerCase())
+      );
+    }
+
+    // Filtro de estado
+    if (filtroEstado !== "") {
+      datosFiltrados = datosFiltrados.filter(
+        (s) => s.activo === (filtroEstado === "true")
+      );
+    }
+
+    // Filtro de cinta
+    if (filtroCinta) {
+      datosFiltrados = datosFiltrados.filter(
+        (s) => s.cintaActualId === parseInt(filtroCinta)
+      );
+    }
+
+    // Filtro de clase
+    if (filtroClase) {
+      datosFiltrados = datosFiltrados.filter(
+        (s) => s.claseId === parseInt(filtroClase)
+      );
+    }
+
+    // Filtro de mensualidad
+    if (filtroMensualidad) {
+      datosFiltrados = datosFiltrados.filter(
+        (s) => s.conceptoMensualidadId === parseInt(filtroMensualidad)
+      );
+    }
+
+    // Filtro de edad mínima
+    if (filtroEdadMin && filtroEdadMin !== "") {
+      const edadMin = parseInt(filtroEdadMin);
+      if (!isNaN(edadMin)) {
+        datosFiltrados = datosFiltrados.filter(
+          (s) => s.edad >= edadMin
+        );
+      }
+    }
+
+    // Filtro de edad máxima
+    if (filtroEdadMax && filtroEdadMax !== "") {
+      const edadMax = parseInt(filtroEdadMax);
+      if (!isNaN(edadMax)) {
+        datosFiltrados = datosFiltrados.filter(
+          (s) => s.edad <= edadMax
+        );
+      }
+    }
+
     setFiltrados(datosFiltrados);
     setPagina(1);
-  }, [filtro, socios]);
+  }, [
+    filtro,
+    socios,
+    filtroEstado,
+    filtroCinta,
+    filtroClase,
+    filtroMensualidad,
+    filtroEdadMin,
+    filtroEdadMax,
+  ]);
 
   const indiceInicio = (pagina - 1) * itemsPorPagina;
   const indiceFin = indiceInicio + itemsPorPagina;
@@ -89,12 +194,12 @@ export default function Socios() {
 
   const cambiarEstado = async (slug, nuevoEstado) => {
     try {
-      await api.patch(`/socios/${slug}`, { habilitado: nuevoEstado });
+      await api.patch(`/alumnos/${slug}/estado`, { activo: nuevoEstado });
 
       Swal.fire({
         icon: "success",
         title: "Estado actualizado",
-        text: `Socio ${nuevoEstado ? "activado" : "desactivado"} exitosamente`,
+        text: `Alumno ${nuevoEstado ? "activado" : "desactivado"} exitosamente`,
         confirmButtonColor: "#d32f2f",
       });
 
@@ -103,7 +208,7 @@ export default function Socios() {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "No se pudo cambiar el estado del socio",
+        text: "No se pudo cambiar el estado del alumno",
         confirmButtonColor: "#d32f2f",
       });
     }
@@ -112,6 +217,16 @@ export default function Socios() {
   const abrirModalEditar = (socio) => {
     setSocioEditar(socio);
     setModalEditarAbierto(true);
+  };
+
+  const limpiarTodosFiltros = () => {
+    setFiltro("");
+    setFiltroEstado("");
+    setFiltroCinta("");
+    setFiltroClase("");
+    setFiltroMensualidad("");
+    setFiltroEdadMin("");
+    setFiltroEdadMax("");
   };
 
   const totalPaginas = Math.ceil(filtrados.length / itemsPorPagina);
@@ -126,7 +241,7 @@ export default function Socios() {
           mb: 3,
         }}
       >
-        <h1 className="page-title">Gestión de Socios</h1>
+        <h1 className="page-title">Gestión de Alumnos</h1>
         <Button
           variant="contained"
           startIcon={<PersonAdd />}
@@ -138,13 +253,13 @@ export default function Socios() {
             },
           }}
         >
-          Agregar Socio
+          Agregar Alumno
         </Button>
       </Box>
 
       <Box sx={{ mb: 2 }}>
         <TextField
-          placeholder="Buscar por nombre, apellido o email..."
+          placeholder="Buscar por nombre, apellido o tutor..."
           variant="outlined"
           size="small"
           fullWidth
@@ -167,6 +282,127 @@ export default function Socios() {
         />
       </Box>
 
+      <Accordion sx={{ mb: 2 }}>
+        <AccordionSummary
+          expandIcon={<ExpandMore />}
+          aria-controls="filtros-content"
+          id="filtros-header"
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <FilterList />
+            <Typography>Filtros Avanzados</Typography>
+          </Box>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "1fr 1fr 1fr" },
+              gap: 2,
+            }}
+          >
+            <FormControl size="small" fullWidth>
+              <InputLabel>Estado</InputLabel>
+              <Select
+                value={filtroEstado}
+                label="Estado"
+                onChange={(e) => setFiltroEstado(e.target.value)}
+              >
+                <MenuItem value="">Todos</MenuItem>
+                <MenuItem value="true">Activos</MenuItem>
+                <MenuItem value="false">Inactivos</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl size="small" fullWidth>
+              <InputLabel>Cinta</InputLabel>
+              <Select
+                value={filtroCinta}
+                label="Cinta"
+                onChange={(e) => setFiltroCinta(e.target.value)}
+              >
+                <MenuItem value="">Todas</MenuItem>
+                {cintas.map((cinta) => (
+                  <MenuItem key={cinta.id} value={cinta.id}>
+                    {cinta.nombre}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl size="small" fullWidth>
+              <InputLabel>Clase/Horario</InputLabel>
+              <Select
+                value={filtroClase}
+                label="Clase/Horario"
+                onChange={(e) => setFiltroClase(e.target.value)}
+              >
+                <MenuItem value="">Todas</MenuItem>
+                {clases.map((clase) => (
+                  <MenuItem key={clase.id} value={clase.id}>
+                    {clase.nombre} - {clase.dias}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl size="small" fullWidth>
+              <InputLabel>Mensualidad</InputLabel>
+              <Select
+                value={filtroMensualidad}
+                label="Mensualidad"
+                onChange={(e) => setFiltroMensualidad(e.target.value)}
+              >
+                <MenuItem value="">Todas</MenuItem>
+                {conceptos.map((concepto) => (
+                  <MenuItem key={concepto.id} value={concepto.id}>
+                    {concepto.nombre}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <TextField
+              label="Edad Mínima"
+              type="number"
+              size="small"
+              fullWidth
+              value={filtroEdadMin}
+              onChange={(e) => setFiltroEdadMin(e.target.value)}
+              inputProps={{ min: 0, max: 100 }}
+            />
+
+            <TextField
+              label="Edad Máxima"
+              type="number"
+              size="small"
+              fullWidth
+              value={filtroEdadMax}
+              onChange={(e) => setFiltroEdadMax(e.target.value)}
+              inputProps={{ min: 0, max: 100 }}
+            />
+          </Box>
+
+          {(filtroEstado ||
+            filtroCinta ||
+            filtroClase ||
+            filtroMensualidad ||
+            filtroEdadMin ||
+            filtroEdadMax) && (
+            <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end" }}>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<Clear />}
+                onClick={limpiarTodosFiltros}
+              >
+                Limpiar Filtros
+              </Button>
+            </Box>
+          )}
+        </AccordionDetails>
+      </Accordion>
+
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
@@ -187,16 +423,25 @@ export default function Socios() {
                     Nombre Completo
                   </TableCell>
                   <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                    Email
+                    Edad
                   </TableCell>
                   <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                    Teléfono
+                    Cinta
                   </TableCell>
                   <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                    Sucursal
+                    Clase
                   </TableCell>
                   <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                    Membresía
+                    Horario
+                  </TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                    Tutor
+                  </TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                    Teléfono Tutor
+                  </TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                    Mensualidad
                   </TableCell>
                   <TableCell sx={{ color: "white", fontWeight: "bold" }}>
                     Estado
@@ -212,35 +457,54 @@ export default function Socios() {
               <TableBody>
                 {datosPaginados.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} align="center">
-                      No se encontraron socios
+                    <TableCell colSpan={10} align="center">
+                      No se encontraron alumnos
                     </TableCell>
                   </TableRow>
                 ) : (
-                  datosPaginados.map((socio) => (
-                    <TableRow key={socio.slug} hover>
+                  datosPaginados.map((alumno) => (
+                    <TableRow key={alumno.slug} hover>
                       <TableCell>
-                        {socio.nombre} {socio.apellidoPaterno}{" "}
-                        {socio.apellidoMaterno}
+                        {alumno.nombreCompleto || `${alumno.nombre} ${alumno.apellidoPaterno} ${alumno.apellidoMaterno}`}
                       </TableCell>
-                      <TableCell>{socio.email}</TableCell>
-                      <TableCell>{socio.telefono || "N/A"}</TableCell>
-                      <TableCell>{socio.nombreSucursal}</TableCell>
+                      <TableCell>{alumno.edad} años</TableCell>
                       <TableCell>
-                        {socio.membresiaActiva ? (
+                        {alumno.cintaActualNombre ? (
                           <Chip
-                            label={socio.membresiaActual}
+                            label={alumno.cintaActualNombre}
+                            size="small"
+                            sx={{
+                              backgroundColor: alumno.cintaActualColor || "#666",
+                              color: "white",
+                            }}
+                          />
+                        ) : (
+                          "Sin cinta"
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {alumno.claseNombre || "Sin clase"}
+                      </TableCell>
+                      <TableCell>
+                        {alumno.claseHorario || "-"}
+                      </TableCell>
+                      <TableCell>{alumno.nombreTutor}</TableCell>
+                      <TableCell>{alumno.telefonoTutor || "N/A"}</TableCell>
+                      <TableCell>
+                        {alumno.conceptoMensualidadNombre ? (
+                          <Chip
+                            label={alumno.conceptoMensualidadNombre}
                             color="success"
                             size="small"
                           />
                         ) : (
-                          <Chip label="Sin membresía" color="default" size="small" />
+                          <Chip label="Sin mensualidad" color="default" size="small" />
                         )}
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={socio.habilitado ? "Activo" : "Inactivo"}
-                          color={socio.habilitado ? "success" : "error"}
+                          label={alumno.activo ? "Activo" : "Inactivo"}
+                          color={alumno.activo ? "success" : "error"}
                           size="small"
                         />
                       </TableCell>
@@ -250,19 +514,19 @@ export default function Socios() {
                             variant="outlined"
                             color="primary"
                             size="small"
-                            onClick={() => abrirModalEditar(socio)}
+                            onClick={() => abrirModalEditar(alumno)}
                           >
                             Editar
                           </Button>
                           <Button
                             variant="outlined"
-                            color={socio.habilitado ? "error" : "success"}
+                            color={alumno.activo ? "error" : "success"}
                             size="small"
                             onClick={() =>
-                              cambiarEstado(socio.slug, !socio.habilitado)
+                              cambiarEstado(alumno.slug, !alumno.activo)
                             }
                           >
-                            {socio.habilitado ? "Desactivar" : "Activar"}
+                            {alumno.activo ? "Desactivar" : "Activar"}
                           </Button>
                         </Box>
                       </TableCell>

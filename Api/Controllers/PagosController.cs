@@ -1,63 +1,76 @@
 using Api.Comun.Modelos.Pagos;
-using Api.Entidades; 
-using Api.Persistencia;
+using Api.Servicios;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
+namespace Api.Controllers;
 
-namespace Api.Controllers
+[Authorize]
+[ApiController]
+[Route("pagos")]
+[Route("v1/pagos")]
+public class PagosController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class PagosController : ControllerBase
+    private readonly IPagoServicio _pagoServicio;
+
+    public PagosController(IPagoServicio pagoServicio)
     {
-        private readonly AplicacionBdContexto _contexto;
+        _pagoServicio = pagoServicio;
+    }
 
-        public PagosController(AplicacionBdContexto contexto)
-        {
-            _contexto = contexto;
-        }
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<BuscarPagoDto>>> ObtenerPagos(
+        [FromQuery] int? alumnoId = null,
+        [FromQuery] int? conceptoId = null,
+        [FromQuery] string? estado = null,
+        [FromQuery] DateTime? fechaInicio = null,
+        [FromQuery] DateTime? fechaFin = null)
+    {
+        var pagos = await _pagoServicio.ObtenerTodosAsync(alumnoId, conceptoId, estado, fechaInicio, fechaFin);
+        return Ok(pagos);
+    }
 
-        // GET: api/pagos
-        [HttpGet]
-        public async Task<IActionResult> ObtenerPagos()
-        {
-            var pagos = await _contexto.Pagos
-                .Include(p => p.Socio) // Incluir datos del Socio
-                .Include(p => p.Sucursal) // Incluir datos de la Sucursal
-                .Include(p => p.UsuarioRegistro) // Incluir datos del Usuario que registró
-                .OrderByDescending(p => p.Fecha) // Corregido: FechaPago -> Fecha
-                .ToListAsync();
+    [HttpGet("{id}")]
+    public async Task<ActionResult<BuscarPagoDto>> ObtenerPago(int id)
+    {
+        var pago = await _pagoServicio.ObtenerPorIdAsync(id);
 
-            return Ok(pagos);
-        }
+        if (pago == null)
+            return NotFound();
 
-        // POST: api/pagos
-        [HttpPost]
-        public async Task<IActionResult> CrearPago([FromBody] CrearPagoDto nuevoPago)
-        {
-            if (nuevoPago == null)
-            {
-                return BadRequest("Datos del pago inválidos.");
-            }
+        return Ok(pago);
+    }
 
-            var pago = new Pago
-            {
-                Monto = nuevoPago.Monto,
-                MetodoPago = nuevoPago.MetodoPago,
-                Referencia = nuevoPago.Referencia,
-                SocioId = nuevoPago.SocioId,
-                SocioMembresiaId = nuevoPago.SocioMembresiaId,
-                SucursalId = nuevoPago.SucursalId,
-                UsuarioRegistroId = nuevoPago.UsuarioRegistroId,
-                Fecha = DateTime.UtcNow, // Corregido: FechaPago -> Fecha
-                Estado = "Confirmado" // Asignamos un estado por defecto
-            };
+    [HttpPost]
+    public async Task<ActionResult<BuscarPagoDto>> CrearPago([FromBody] CrearPagoDto dto)
+    {
+        // TODO: Obtener usuario actual del contexto del usuario autenticado
+        var usuarioId = 1;
 
-            await _contexto.Pagos.AddAsync(pago);
-            await _contexto.SaveChangesAsync();
+        var pagoCreado = await _pagoServicio.CrearAsync(dto, usuarioId);
+        return CreatedAtAction(nameof(ObtenerPago), new { id = pagoCreado.Id }, pagoCreado);
+    }
 
-            return Ok(new { message = "Pago registrado con éxito" });
-        }
+    [HttpPut("{id}")]
+    public async Task<ActionResult<BuscarPagoDto>> ActualizarPago(int id, [FromBody] ModificarPagoDto dto)
+    {
+        var pagoActualizado = await _pagoServicio.ActualizarAsync(id, dto);
+        return Ok(pagoActualizado);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> EliminarPago(int id)
+    {
+        await _pagoServicio.EliminarAsync(id);
+        return NoContent();
+    }
+
+    [HttpGet("estadisticas")]
+    public async Task<ActionResult<object>> ObtenerEstadisticas(
+        [FromQuery] DateTime? fechaInicio = null,
+        [FromQuery] DateTime? fechaFin = null)
+    {
+        var estadisticas = await _pagoServicio.ObtenerEstadisticasAsync(fechaInicio, fechaFin);
+        return Ok(estadisticas);
     }
 }

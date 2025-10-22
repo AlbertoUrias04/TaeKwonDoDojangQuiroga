@@ -22,7 +22,7 @@ public class Sha512HasherServicio : IHasherServicio
         var sb = new StringBuilder();
         for (var i = 0; i < hash.Length; i++)
         {
-            sb.Append(hash[i].ToString(@"x2"));
+            sb.Append(hash[i].ToString(@"X2")); // X2 = mayúsculas, x2 = minúsculas
         }
 
         return sb.ToString();

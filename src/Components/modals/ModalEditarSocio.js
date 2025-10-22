@@ -13,6 +13,8 @@ import {
     FormControlLabel,
     Switch,
     CircularProgress,
+    Box,
+    Typography,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -26,45 +28,63 @@ const esquema = yup.object().shape({
         .string()
         .required("El nombre es obligatorio")
         .min(2, "El nombre debe tener al menos 2 caracteres")
-        .max(50, "El nombre no puede exceder 50 caracteres"),
+        .max(100, "El nombre no puede exceder 100 caracteres"),
     apellidoPaterno: yup
         .string()
         .required("El apellido paterno es obligatorio")
         .min(2, "El apellido debe tener al menos 2 caracteres")
-        .max(50, "El apellido no puede exceder 50 caracteres"),
+        .max(100, "El apellido no puede exceder 100 caracteres"),
     apellidoMaterno: yup
         .string()
         .required("El apellido materno es obligatorio")
         .min(2, "El apellido debe tener al menos 2 caracteres")
-        .max(50, "El apellido no puede exceder 50 caracteres"),
-    email: yup
-        .string()
-        .required("El email es obligatorio")
-        .email("Ingresa un email válido"),
-    telefono: yup
-        .string()
-        .matches(/^[0-9]{10}$/, "Ingresa un teléfono válido de 10 dígitos")
-        .nullable(),
+        .max(100, "El apellido no puede exceder 100 caracteres"),
     fechaNacimiento: yup
         .date()
         .required("La fecha de nacimiento es obligatoria")
         .max(new Date(), "La fecha no puede ser futura")
-        .test("edad-minima", "Debe ser mayor de 12 años", function(value) {
+        .test("edad-maxima", "El alumno debe ser menor de edad (máximo 17 años)", function(value) {
             if (!value) return false;
             const hoy = new Date();
             const edad = hoy.getFullYear() - value.getFullYear();
-            return edad >= 12;
+            return edad <= 17;
         }),
-    sucursalId: yup
+    direccion: yup.string().nullable(),
+    sexo: yup.string().nullable(),
+    nombreTutor: yup
+        .string()
+        .required("El nombre del tutor es obligatorio")
+        .min(2, "El nombre del tutor debe tener al menos 2 caracteres")
+        .max(200, "El nombre del tutor no puede exceder 200 caracteres"),
+    telefonoTutor: yup
+        .string()
+        .required("El teléfono del tutor es obligatorio")
+        .matches(/^[0-9]{10}$/, "Ingresa un teléfono válido de 10 dígitos"),
+    emailTutor: yup
+        .string()
+        .required("El email del tutor es obligatorio")
+        .email("Ingresa un email válido")
+        .max(150, "El email no puede exceder 150 caracteres"),
+    cintaActualId: yup
         .number()
-        .required("La sucursal es obligatoria")
-        .positive("Selecciona una sucursal"),
-    habilitado: yup.boolean(),
+        .nullable()
+        .transform((value, originalValue) => (originalValue === "" ? null : value)),
+    claseId: yup
+        .number()
+        .nullable()
+        .transform((value, originalValue) => (originalValue === "" ? null : value)),
+    conceptoMensualidadId: yup
+        .number()
+        .nullable()
+        .transform((value, originalValue) => (originalValue === "" ? null : value)),
+    activo: yup.boolean(),
 });
 
 export default function ModalEditarSocio({ abierto, cerrar, recargar, socio }) {
     const [guardando, setGuardando] = useState(false);
-    const [sucursales, setSucursales] = useState([]);
+    const [cintas, setCintas] = useState([]);
+    const [clases, setClases] = useState([]);
+    const [conceptos, setConceptos] = useState([]);
 
     const {
         register,
@@ -78,36 +98,47 @@ export default function ModalEditarSocio({ abierto, cerrar, recargar, socio }) {
 
     useEffect(() => {
         if (abierto) {
-            cargarSucursales();
+            cargarDatos();
         }
     }, [abierto]);
 
     useEffect(() => {
-        if (socio && sucursales.length > 0) {
+        if (socio && cintas.length > 0 && clases.length > 0 && conceptos.length > 0) {
             // Convertir fecha a formato YYYY-MM-DD para el input
             const fechaFormateada = socio.fechaNacimiento
                 ? new Date(socio.fechaNacimiento).toISOString().split("T")[0]
                 : "";
 
             reset({
-                nombre: socio.nombre,
-                apellidoPaterno: socio.apellidoPaterno,
-                apellidoMaterno: socio.apellidoMaterno,
-                email: socio.email,
-                telefono: socio.telefono || "",
+                nombre: socio.nombre || "",
+                apellidoPaterno: socio.apellidoPaterno || "",
+                apellidoMaterno: socio.apellidoMaterno || "",
                 fechaNacimiento: fechaFormateada,
-                sucursalId: socio.sucursalId || "",
-                habilitado: socio.habilitado ?? true,
+                direccion: socio.direccion || "",
+                sexo: socio.sexo || "",
+                nombreTutor: socio.nombreTutor || "",
+                telefonoTutor: socio.telefonoTutor || "",
+                emailTutor: socio.emailTutor || "",
+                cintaActualId: socio.cintaActualId || "",
+                claseId: socio.claseId || "",
+                conceptoMensualidadId: socio.conceptoMensualidadId || "",
+                activo: socio.activo ?? true,
             });
         }
-    }, [socio, sucursales, reset]);
+    }, [socio, cintas, clases, conceptos, reset]);
 
-    const cargarSucursales = async () => {
+    const cargarDatos = async () => {
         try {
-            const res = await api.get("/sucursales?habilitado=true");
-            setSucursales(res.data || []);
+            const [resCintas, resClases, resConceptos] = await Promise.all([
+                api.get("/cintas?activo=true"),
+                api.get("/clases?activo=true"),
+                api.get("/conceptos?activo=true&tipoConcepto=Mensualidad"),
+            ]);
+            setCintas(resCintas.data || []);
+            setClases(resClases.data || []);
+            setConceptos(resConceptos.data || []);
         } catch (error) {
-            console.error("Error al cargar sucursales:", error);
+            console.error("Error al cargar datos:", error);
         }
     };
 
@@ -124,13 +155,19 @@ export default function ModalEditarSocio({ abierto, cerrar, recargar, socio }) {
         try {
             const payload = {
                 ...data,
-                slug: socio.slug
+                slug: socio.slug,
+                cintaActualId: data.cintaActualId || null,
+                claseId: data.claseId || null,
+                conceptoMensualidadId: data.conceptoMensualidadId || null,
+                direccion: data.direccion || null,
+                sexo: data.sexo || null,
             };
-            await api.put(`/socios/${socio.slug}`, payload);
+
+            await api.put(`/alumnos/${socio.slug}`, payload);
 
             Swal.fire({
                 icon: "success",
-                title: "Socio actualizado",
+                title: "Alumno actualizado",
                 text: "Los datos se actualizaron exitosamente",
                 confirmButtonColor: "#d32f2f",
             });
@@ -139,21 +176,21 @@ export default function ModalEditarSocio({ abierto, cerrar, recargar, socio }) {
             cerrar();
             recargar();
         } catch (error) {
-            console.error("Error al actualizar socio:", error);
+            console.error("Error al actualizar alumno:", error);
 
             let mensajeError = "Ocurrió un error inesperado";
             let detalles = "";
 
             if (error.response) {
                 if (error.response.status === 400) {
-                    mensajeError = "Datos duplicados";
-                    detalles = error.response.data?.message || "Ya existe otro socio con este email o teléfono";
+                    mensajeError = "Datos inválidos";
+                    detalles = error.response.data?.message || "Verifica que todos los datos sean correctos";
                 } else if (error.response.status === 404) {
-                    mensajeError = "Socio no encontrado";
-                    detalles = "El socio que intentas editar no existe";
+                    mensajeError = "Alumno no encontrado";
+                    detalles = "El alumno que intentas editar no existe";
                 } else {
                     mensajeError = "Error del servidor";
-                    detalles = "No se pudo actualizar el socio. Intenta nuevamente.";
+                    detalles = "No se pudo actualizar el alumno. Intenta nuevamente.";
                 }
             } else if (error.request) {
                 mensajeError = "Sin conexión";
@@ -184,107 +221,201 @@ export default function ModalEditarSocio({ abierto, cerrar, recargar, socio }) {
         <Dialog
             open={abierto}
             onClose={handleClose}
-            maxWidth="sm"
+            maxWidth="md"
             fullWidth
             disableEscapeKeyDown={guardando}
         >
             <DialogTitle sx={{ color: "#d32f2f", fontWeight: "bold" }}>
-                Editar Socio
+                Editar Alumno
             </DialogTitle>
             <form onSubmit={handleSubmit(onSubmit)}>
                 <DialogContent>
-                    <TextField
-                        label="Nombre"
-                        fullWidth
-                        {...register("nombre")}
-                        error={!!errors.nombre}
-                        helperText={errors.nombre?.message}
-                        margin="normal"
-                        disabled={guardando}
-                    />
-                    <TextField
-                        label="Apellido Paterno"
-                        fullWidth
-                        {...register("apellidoPaterno")}
-                        error={!!errors.apellidoPaterno}
-                        helperText={errors.apellidoPaterno?.message}
-                        margin="normal"
-                        disabled={guardando}
-                    />
-                    <TextField
-                        label="Apellido Materno"
-                        fullWidth
-                        {...register("apellidoMaterno")}
-                        error={!!errors.apellidoMaterno}
-                        helperText={errors.apellidoMaterno?.message}
-                        margin="normal"
-                        disabled={guardando}
-                    />
-                    <TextField
-                        label="Email"
-                        type="email"
-                        fullWidth
-                        {...register("email")}
-                        error={!!errors.email}
-                        helperText={errors.email?.message}
-                        margin="normal"
-                        disabled={guardando}
-                    />
-                    <TextField
-                        label="Teléfono (10 dígitos)"
-                        fullWidth
-                        {...register("telefono")}
-                        error={!!errors.telefono}
-                        helperText={errors.telefono?.message}
-                        margin="normal"
-                        disabled={guardando}
-                    />
-                    <TextField
-                        label="Fecha de Nacimiento"
-                        type="date"
-                        fullWidth
-                        {...register("fechaNacimiento")}
-                        error={!!errors.fechaNacimiento}
-                        helperText={errors.fechaNacimiento?.message}
-                        margin="normal"
-                        disabled={guardando}
-                        InputLabelProps={{
-                            shrink: true,
-                        }}
-                    />
-                    <FormControl
-                        fullWidth
-                        margin="normal"
-                        error={!!errors.sucursalId}
-                        disabled={guardando}
-                    >
-                        <InputLabel>Sucursal</InputLabel>
-                        <Controller
-                            name="sucursalId"
-                            control={control}
-                            defaultValue=""
-                            render={({ field }) => (
-                                <Select
-                                    {...field}
-                                    label="Sucursal"
-                                    value={field.value || ""}
-                                >
-                                    {sucursales.map((sucursal) => (
-                                        <MenuItem key={sucursal.id} value={sucursal.id}>
-                                            {sucursal.nombre}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            )}
+                    <Typography variant="subtitle2" sx={{ mb: 2, color: "#666", fontWeight: "bold" }}>
+                        Datos del Alumno
+                    </Typography>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+                        <TextField
+                            label="Nombre"
+                            fullWidth
+                            {...register("nombre")}
+                            error={!!errors.nombre}
+                            helperText={errors.nombre?.message}
+                            disabled={guardando}
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
                         />
-                        {errors.sucursalId && (
-                            <FormHelperText>{errors.sucursalId?.message}</FormHelperText>
-                        )}
-                    </FormControl>
+                        <TextField
+                            label="Apellido Paterno"
+                            fullWidth
+                            {...register("apellidoPaterno")}
+                            error={!!errors.apellidoPaterno}
+                            helperText={errors.apellidoPaterno?.message}
+                            disabled={guardando}
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                        />
+                        <TextField
+                            label="Apellido Materno"
+                            fullWidth
+                            {...register("apellidoMaterno")}
+                            error={!!errors.apellidoMaterno}
+                            helperText={errors.apellidoMaterno?.message}
+                            disabled={guardando}
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                        />
+                        <TextField
+                            label="Fecha de Nacimiento"
+                            type="date"
+                            fullWidth
+                            {...register("fechaNacimiento")}
+                            error={!!errors.fechaNacimiento}
+                            helperText={errors.fechaNacimiento?.message}
+                            disabled={guardando}
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                        />
+                        <FormControl fullWidth disabled={guardando}>
+                            <InputLabel>Sexo</InputLabel>
+                            <Controller
+                                name="sexo"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select {...field} label="Sexo">
+                                        <MenuItem value="">
+                                            <em>Seleccionar</em>
+                                        </MenuItem>
+                                        <MenuItem value="Masculino">Masculino</MenuItem>
+                                        <MenuItem value="Femenino">Femenino</MenuItem>
+                                    </Select>
+                                )}
+                            />
+                        </FormControl>
+                        <TextField
+                            label="Dirección"
+                            fullWidth
+                            {...register("direccion")}
+                            error={!!errors.direccion}
+                            helperText={errors.direccion?.message}
+                            disabled={guardando}
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                        />
+                    </Box>
+
+                    <Typography variant="subtitle2" sx={{ mt: 3, mb: 2, color: "#666", fontWeight: "bold" }}>
+                        Datos del Tutor Responsable
+                    </Typography>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+                        <TextField
+                            label="Nombre del Tutor"
+                            fullWidth
+                            {...register("nombreTutor")}
+                            error={!!errors.nombreTutor}
+                            helperText={errors.nombreTutor?.message}
+                            disabled={guardando}
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                        />
+                        <TextField
+                            label="Teléfono del Tutor (10 dígitos)"
+                            fullWidth
+                            {...register("telefonoTutor")}
+                            error={!!errors.telefonoTutor}
+                            helperText={errors.telefonoTutor?.message}
+                            disabled={guardando}
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                        />
+                        <TextField
+                            label="Email del Tutor"
+                            type="email"
+                            fullWidth
+                            {...register("emailTutor")}
+                            error={!!errors.emailTutor}
+                            helperText={errors.emailTutor?.message}
+                            disabled={guardando}
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                            sx={{ gridColumn: "span 2" }}
+                        />
+                    </Box>
+
+                    <Typography variant="subtitle2" sx={{ mt: 3, mb: 2, color: "#666", fontWeight: "bold" }}>
+                        Información de Entrenamiento
+                    </Typography>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+                        <FormControl fullWidth disabled={guardando}>
+                            <InputLabel>Cinta Actual</InputLabel>
+                            <Controller
+                                name="cintaActualId"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select {...field} label="Cinta Actual" value={field.value || ""}>
+                                        <MenuItem value="">
+                                            <em>Sin cinta asignada</em>
+                                        </MenuItem>
+                                        {cintas.map((cinta) => (
+                                            <MenuItem key={cinta.id} value={cinta.id}>
+                                                {cinta.nombre}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                )}
+                            />
+                        </FormControl>
+                        <FormControl fullWidth disabled={guardando}>
+                            <InputLabel>Clase/Horario</InputLabel>
+                            <Controller
+                                name="claseId"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select {...field} label="Clase/Horario" value={field.value || ""}>
+                                        <MenuItem value="">
+                                            <em>Sin clase asignada</em>
+                                        </MenuItem>
+                                        {clases.map((clase) => (
+                                            <MenuItem key={clase.id} value={clase.id}>
+                                                {clase.nombre} - {clase.dias}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                )}
+                            />
+                        </FormControl>
+                        <FormControl fullWidth disabled={guardando} sx={{ gridColumn: "span 2" }}>
+                            <InputLabel>Mensualidad Contratada</InputLabel>
+                            <Controller
+                                name="conceptoMensualidadId"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select {...field} label="Mensualidad Contratada" value={field.value || ""}>
+                                        <MenuItem value="">
+                                            <em>Sin mensualidad</em>
+                                        </MenuItem>
+                                        {conceptos.map((concepto) => (
+                                            <MenuItem key={concepto.id} value={concepto.id}>
+                                                {concepto.nombre} - ${concepto.precio}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                )}
+                            />
+                        </FormControl>
+                    </Box>
+
                     <FormControlLabel
                         control={
                             <Controller
-                                name="habilitado"
+                                name="activo"
                                 control={control}
                                 render={({ field }) => (
                                     <Switch
@@ -295,7 +426,7 @@ export default function ModalEditarSocio({ abierto, cerrar, recargar, socio }) {
                                 )}
                             />
                         }
-                        label="Habilitado"
+                        label="Activo"
                         sx={{ mt: 2 }}
                     />
                 </DialogContent>

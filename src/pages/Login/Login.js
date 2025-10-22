@@ -50,8 +50,8 @@ const Login = () => {
                     <div className="login-icon">
                         <i className="bi bi-person-circle"></i>
                     </div>
-                    <h2>Control Fitness</h2>
-                    <p className="login-subtitle">Acceso para empleados</p>
+                    <h2>Academia de Taekwondo</h2>
+                    <p className="login-subtitle">Sistema de Gestión</p>
                 </div>
 
                 <form className="login-form" onSubmit={handleSubmit} noValidate>

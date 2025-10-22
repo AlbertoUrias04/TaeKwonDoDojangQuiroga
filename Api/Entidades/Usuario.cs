@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations.Schema;
 using Api.Comun.Interfaces;
 
 namespace Api.Entidades
@@ -11,12 +10,12 @@ namespace Api.Entidades
         public string ApellidoMaterno { get; set; } = string.Empty;
         public string NombreUsuario { get; set; } = string.Empty;
         public string Contraseña { get; set; } = string.Empty;
-        public int? SucursalId { get; set; }
-        public bool Habilitado { get; set; }
+        public string Rol { get; set; } = "Recepcionista"; // "Administrador" o "Recepcionista"
+        public bool Habilitado { get; set; } = true;
         public string Slug { get; set; } = string.Empty;
 
-        public virtual Sucursal? Sucursal { get; set; }
-        public virtual List<SesionUsuario> Sesiones { get; set; } = new List<SesionUsuario>();
+        public virtual ICollection<Pago> PagosRegistrados { get; set; } = new List<Pago>();
+        public virtual ICollection<Asistencia> AsistenciasRegistradas { get; set; } = new List<Asistencia>();
 
         public string ObtenerDescripcionParaSlug()
         {

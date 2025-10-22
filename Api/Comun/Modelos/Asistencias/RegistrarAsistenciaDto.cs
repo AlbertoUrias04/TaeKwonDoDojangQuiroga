@@ -5,10 +5,10 @@ namespace Api.Comun.Modelos.Asistencias;
 public class RegistrarAsistenciaDto
 {
     [Required]
-    public int SocioId { get; set; }
+    public int AlumnoId { get; set; }
 
     [Required]
-    public int SucursalId { get; set; }
+    public int ClaseId { get; set; }
 
     public DateTime? FechaHoraSalida { get; set; }
 }

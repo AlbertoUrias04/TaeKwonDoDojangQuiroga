@@ -11,14 +11,19 @@ public class AsistenciaConfiguracion : IEntityTypeConfiguration<Asistencia>
         builder.ToTable("Asistencias");
         builder.HasKey(a => a.Id);
 
-        builder.HasOne(a => a.Socio)
-            .WithMany(s => s.Asistencias)
-            .HasForeignKey(a => a.SocioId)
+        builder.HasOne(a => a.Alumno)
+            .WithMany(al => al.Asistencias)
+            .HasForeignKey(a => a.AlumnoId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(a => a.Clase)
+            .WithMany(c => c.Asistencias)
+            .HasForeignKey(a => a.ClaseId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(a => a.Sucursal)
-            .WithMany()
-            .HasForeignKey(a => a.SucursalId)
+        builder.HasOne(a => a.UsuarioRegistro)
+            .WithMany(u => u.AsistenciasRegistradas)
+            .HasForeignKey(a => a.UsuarioRegistroId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
