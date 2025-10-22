@@ -16,13 +16,13 @@ public class AplicacionBdContexto : DbContext, IAplicacionBdContexto
     }
     // Entidades del sistema de autenticación
     public DbSet<Usuario> Usuarios { get; set; }
-    public DbSet<SesionUsuario> SesionesUsuario { get; set; }
 
-    // Entidades del gimnasio
-    public DbSet<Sucursal> Sucursales { get; set; }
-    public DbSet<Socio> Socios { get; set; }
-    public DbSet<Membresia> Membresias { get; set; }
-    public DbSet<SocioMembresia> SocioMembresias { get; set; }
+    // Entidades de la academia de Taekwondo
+    public DbSet<Alumno> Alumnos { get; set; }
+    public DbSet<Cinta> Cintas { get; set; }
+    public DbSet<Clase> Clases { get; set; }
+    public DbSet<Concepto> Conceptos { get; set; }
+    public DbSet<AlumnoInscripcion> AlumnoInscripciones { get; set; }
     public DbSet<Pago> Pagos { get; set; }
     public DbSet<Asistencia> Asistencias { get; set; }
 

@@ -1,11 +1,10 @@
-/* Login Wrapper - Pantalla completa con fondo blanco */
-.login-wrapper {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #ffffff;
-    padding: 20px;
+/* Estilos globales para evitar scroll */
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
 }
 
 /* Contenedor principal del login */
@@ -212,18 +211,25 @@
 
 /* Estilo para el contenedor principal que ocupa toda la pantalla */
 .login-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
   height: 100vh;
   width: 100vw;
-  
+  overflow: hidden;
+  margin: 0;
+  padding: 20px;
+
   /* Centra el contenido (el formulario) vertical y horizontalmente */
   display: flex;
   justify-content: center;
   align-items: center;
-  
+
   /* Aplica la imagen de fondo con una capa oscura encima para el efecto difuminado */
   background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), var(--background-image);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 

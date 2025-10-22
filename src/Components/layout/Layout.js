@@ -21,6 +21,8 @@ export default function Layout() {
                     backgroundColor: "#f4f6f8",
                     boxSizing: "border-box",
                     maxWidth: "100%",
+                    overflowY: "auto",
+                    height: "100vh",
                 }}
             >
                 <Outlet />

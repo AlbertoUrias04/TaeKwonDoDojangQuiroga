@@ -11,6 +11,8 @@ import {
     MenuItem,
     FormHelperText,
     CircularProgress,
+    Box,
+    Typography,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
@@ -24,44 +26,62 @@ const esquema = yup.object().shape({
         .string()
         .required("El nombre es obligatorio")
         .min(2, "El nombre debe tener al menos 2 caracteres")
-        .max(50, "El nombre no puede exceder 50 caracteres"),
+        .max(100, "El nombre no puede exceder 100 caracteres"),
     apellidoPaterno: yup
         .string()
         .required("El apellido paterno es obligatorio")
         .min(2, "El apellido debe tener al menos 2 caracteres")
-        .max(50, "El apellido no puede exceder 50 caracteres"),
+        .max(100, "El apellido no puede exceder 100 caracteres"),
     apellidoMaterno: yup
         .string()
         .required("El apellido materno es obligatorio")
         .min(2, "El apellido debe tener al menos 2 caracteres")
-        .max(50, "El apellido no puede exceder 50 caracteres"),
-    email: yup
-        .string()
-        .required("El email es obligatorio")
-        .email("Ingresa un email válido"),
-    telefono: yup
-        .string()
-        .matches(/^[0-9]{10}$/, "Ingresa un teléfono válido de 10 dígitos")
-        .nullable(),
+        .max(100, "El apellido no puede exceder 100 caracteres"),
     fechaNacimiento: yup
         .date()
         .required("La fecha de nacimiento es obligatoria")
         .max(new Date(), "La fecha no puede ser futura")
-        .test("edad-minima", "Debe ser mayor de 12 años", function(value) {
+        .test("edad-maxima", "El alumno debe ser menor de edad (máximo 17 años)", function(value) {
             if (!value) return false;
             const hoy = new Date();
             const edad = hoy.getFullYear() - value.getFullYear();
-            return edad >= 12;
+            return edad <= 17;
         }),
-    sucursalId: yup
+    direccion: yup.string().nullable(),
+    sexo: yup.string().nullable(),
+    nombreTutor: yup
+        .string()
+        .required("El nombre del tutor es obligatorio")
+        .min(2, "El nombre del tutor debe tener al menos 2 caracteres")
+        .max(200, "El nombre del tutor no puede exceder 200 caracteres"),
+    telefonoTutor: yup
+        .string()
+        .required("El teléfono del tutor es obligatorio")
+        .matches(/^[0-9]{10}$/, "Ingresa un teléfono válido de 10 dígitos"),
+    emailTutor: yup
+        .string()
+        .required("El email del tutor es obligatorio")
+        .email("Ingresa un email válido")
+        .max(150, "El email no puede exceder 150 caracteres"),
+    cintaActualId: yup
         .number()
-        .required("La sucursal es obligatoria")
-        .positive("Selecciona una sucursal"),
+        .nullable()
+        .transform((value, originalValue) => (originalValue === "" ? null : value)),
+    claseId: yup
+        .number()
+        .nullable()
+        .transform((value, originalValue) => (originalValue === "" ? null : value)),
+    conceptoMensualidadId: yup
+        .number()
+        .nullable()
+        .transform((value, originalValue) => (originalValue === "" ? null : value)),
 });
 
 export default function ModalCrearSocio({ abierto, cerrar, recargar }) {
     const [guardando, setGuardando] = useState(false);
-    const [sucursales, setSucursales] = useState([]);
+    const [cintas, setCintas] = useState([]);
+    const [clases, setClases] = useState([]);
+    const [conceptos, setConceptos] = useState([]);
 
     const {
         register,
@@ -75,29 +95,40 @@ export default function ModalCrearSocio({ abierto, cerrar, recargar }) {
             nombre: "",
             apellidoPaterno: "",
             apellidoMaterno: "",
-            email: "",
-            telefono: "",
             fechaNacimiento: "",
-            sucursalId: "",
+            direccion: "",
+            sexo: "",
+            nombreTutor: "",
+            telefonoTutor: "",
+            emailTutor: "",
+            cintaActualId: "",
+            claseId: "",
+            conceptoMensualidadId: "",
         },
     });
 
     useEffect(() => {
         if (abierto) {
-            cargarSucursales();
+            cargarDatos();
         }
     }, [abierto]);
 
-    const cargarSucursales = async () => {
+    const cargarDatos = async () => {
         try {
-            const res = await api.get("/sucursales?habilitado=true");
-            setSucursales(res.data || []);
+            const [resCintas, resClases, resConceptos] = await Promise.all([
+                api.get("/cintas?activo=true"),
+                api.get("/clases?activo=true"),
+                api.get("/conceptos?activo=true&tipoConcepto=Mensualidad"),
+            ]);
+            setCintas(resCintas.data || []);
+            setClases(resClases.data || []);
+            setConceptos(resConceptos.data || []);
         } catch (error) {
-            console.error("Error al cargar sucursales:", error);
+            console.error("Error al cargar datos:", error);
             Swal.fire({
                 icon: "error",
                 title: "Error",
-                text: "No se pudieron cargar las sucursales",
+                text: "No se pudieron cargar los datos necesarios",
                 confirmButtonColor: "#d32f2f",
             });
         }
@@ -114,15 +145,22 @@ export default function ModalCrearSocio({ abierto, cerrar, recargar }) {
         setGuardando(true);
 
         try {
-            await api.post("/socios", {
+            // Convertir valores vacíos a null
+            const payload = {
                 ...data,
-                habilitado: true,
-            });
+                cintaActualId: data.cintaActualId || null,
+                claseId: data.claseId || null,
+                conceptoMensualidadId: data.conceptoMensualidadId || null,
+                direccion: data.direccion || null,
+                sexo: data.sexo || null,
+            };
+
+            await api.post("/alumnos", payload);
 
             Swal.fire({
                 icon: "success",
-                title: "Socio creado",
-                text: "El socio se ha registrado exitosamente",
+                title: "Alumno creado",
+                text: "El alumno se ha registrado exitosamente",
                 confirmButtonColor: "#d32f2f",
             });
 
@@ -130,21 +168,21 @@ export default function ModalCrearSocio({ abierto, cerrar, recargar }) {
             cerrar();
             recargar();
         } catch (error) {
-            console.error("Error al guardar socio:", error);
+            console.error("Error al guardar alumno:", error);
 
-            let mensajeError = "Ocurrió un error inesperado al guardar el socio";
+            let mensajeError = "Ocurrió un error inesperado al guardar el alumno";
             let detalles = "";
 
             if (error.response) {
                 if (error.response.status === 400) {
-                    mensajeError = "Datos duplicados";
-                    detalles = error.response.data?.message || "Ya existe un socio con este email o teléfono";
+                    mensajeError = "Datos inválidos";
+                    detalles = error.response.data?.message || "Verifica que todos los datos sean correctos";
                 } else if (error.response.status === 409) {
-                    mensajeError = "Socio duplicado";
-                    detalles = error.response.data?.message || "Ya existe un socio con este email.";
+                    mensajeError = "Alumno duplicado";
+                    detalles = error.response.data?.message || "Ya existe un alumno con estos datos.";
                 } else {
                     mensajeError = "Error del servidor";
-                    detalles = "No se pudo guardar el socio. Intenta nuevamente.";
+                    detalles = "No se pudo guardar el alumno. Intenta nuevamente.";
                 }
             } else if (error.request) {
                 mensajeError = "Sin conexión";
@@ -167,102 +205,176 @@ export default function ModalCrearSocio({ abierto, cerrar, recargar }) {
         <Dialog
             open={abierto}
             onClose={handleClose}
-            maxWidth="sm"
+            maxWidth="md"
             fullWidth
             disableEscapeKeyDown={guardando}
         >
             <DialogTitle sx={{ color: "#d32f2f", fontWeight: "bold" }}>
-                Nuevo Socio
+                Nuevo Alumno
             </DialogTitle>
             <form onSubmit={handleSubmit(onSubmit)}>
                 <DialogContent>
-                    <TextField
-                        label="Nombre"
-                        fullWidth
-                        {...register("nombre")}
-                        error={!!errors.nombre}
-                        helperText={errors.nombre?.message}
-                        margin="normal"
-                        disabled={guardando}
-                        autoFocus
-                    />
-                    <TextField
-                        label="Apellido Paterno"
-                        fullWidth
-                        {...register("apellidoPaterno")}
-                        error={!!errors.apellidoPaterno}
-                        helperText={errors.apellidoPaterno?.message}
-                        margin="normal"
-                        disabled={guardando}
-                    />
-                    <TextField
-                        label="Apellido Materno"
-                        fullWidth
-                        {...register("apellidoMaterno")}
-                        error={!!errors.apellidoMaterno}
-                        helperText={errors.apellidoMaterno?.message}
-                        margin="normal"
-                        disabled={guardando}
-                    />
-                    <TextField
-                        label="Email"
-                        type="email"
-                        fullWidth
-                        {...register("email")}
-                        error={!!errors.email}
-                        helperText={errors.email?.message}
-                        margin="normal"
-                        disabled={guardando}
-                    />
-                    <TextField
-                        label="Teléfono (10 dígitos)"
-                        fullWidth
-                        {...register("telefono")}
-                        error={!!errors.telefono}
-                        helperText={errors.telefono?.message}
-                        margin="normal"
-                        disabled={guardando}
-                    />
-                    <TextField
-                        label="Fecha de Nacimiento"
-                        type="date"
-                        fullWidth
-                        {...register("fechaNacimiento")}
-                        error={!!errors.fechaNacimiento}
-                        helperText={errors.fechaNacimiento?.message}
-                        margin="normal"
-                        disabled={guardando}
-                        InputLabelProps={{
-                            shrink: true,
-                        }}
-                    />
-                    <FormControl
-                        fullWidth
-                        margin="normal"
-                        error={!!errors.sucursalId}
-                        disabled={guardando}
-                    >
-                        <InputLabel>Sucursal</InputLabel>
-                        <Controller
-                            name="sucursalId"
-                            control={control}
-                            render={({ field }) => (
-                                <Select {...field} label="Sucursal">
-                                    <MenuItem value="">
-                                        <em>Selecciona una sucursal</em>
-                                    </MenuItem>
-                                    {sucursales.map((sucursal) => (
-                                        <MenuItem key={sucursal.id} value={sucursal.id}>
-                                            {sucursal.nombre}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            )}
+                    <Typography variant="subtitle2" sx={{ mb: 2, color: "#666", fontWeight: "bold" }}>
+                        Datos del Alumno
+                    </Typography>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+                        <TextField
+                            label="Nombre"
+                            fullWidth
+                            {...register("nombre")}
+                            error={!!errors.nombre}
+                            helperText={errors.nombre?.message}
+                            disabled={guardando}
+                            autoFocus
                         />
-                        {errors.sucursalId && (
-                            <FormHelperText>{errors.sucursalId?.message}</FormHelperText>
-                        )}
-                    </FormControl>
+                        <TextField
+                            label="Apellido Paterno"
+                            fullWidth
+                            {...register("apellidoPaterno")}
+                            error={!!errors.apellidoPaterno}
+                            helperText={errors.apellidoPaterno?.message}
+                            disabled={guardando}
+                        />
+                        <TextField
+                            label="Apellido Materno"
+                            fullWidth
+                            {...register("apellidoMaterno")}
+                            error={!!errors.apellidoMaterno}
+                            helperText={errors.apellidoMaterno?.message}
+                            disabled={guardando}
+                        />
+                        <TextField
+                            label="Fecha de Nacimiento"
+                            type="date"
+                            fullWidth
+                            {...register("fechaNacimiento")}
+                            error={!!errors.fechaNacimiento}
+                            helperText={errors.fechaNacimiento?.message}
+                            disabled={guardando}
+                            InputLabelProps={{
+                                shrink: true,
+                            }}
+                        />
+                        <FormControl fullWidth disabled={guardando}>
+                            <InputLabel>Sexo</InputLabel>
+                            <Controller
+                                name="sexo"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select {...field} label="Sexo">
+                                        <MenuItem value="">
+                                            <em>Seleccionar</em>
+                                        </MenuItem>
+                                        <MenuItem value="Masculino">Masculino</MenuItem>
+                                        <MenuItem value="Femenino">Femenino</MenuItem>
+                                    </Select>
+                                )}
+                            />
+                        </FormControl>
+                        <TextField
+                            label="Dirección"
+                            fullWidth
+                            {...register("direccion")}
+                            error={!!errors.direccion}
+                            helperText={errors.direccion?.message}
+                            disabled={guardando}
+                        />
+                    </Box>
+
+                    <Typography variant="subtitle2" sx={{ mt: 3, mb: 2, color: "#666", fontWeight: "bold" }}>
+                        Datos del Tutor Responsable
+                    </Typography>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+                        <TextField
+                            label="Nombre del Tutor"
+                            fullWidth
+                            {...register("nombreTutor")}
+                            error={!!errors.nombreTutor}
+                            helperText={errors.nombreTutor?.message}
+                            disabled={guardando}
+                        />
+                        <TextField
+                            label="Teléfono del Tutor (10 dígitos)"
+                            fullWidth
+                            {...register("telefonoTutor")}
+                            error={!!errors.telefonoTutor}
+                            helperText={errors.telefonoTutor?.message}
+                            disabled={guardando}
+                        />
+                        <TextField
+                            label="Email del Tutor"
+                            type="email"
+                            fullWidth
+                            {...register("emailTutor")}
+                            error={!!errors.emailTutor}
+                            helperText={errors.emailTutor?.message}
+                            disabled={guardando}
+                            sx={{ gridColumn: "span 2" }}
+                        />
+                    </Box>
+
+                    <Typography variant="subtitle2" sx={{ mt: 3, mb: 2, color: "#666", fontWeight: "bold" }}>
+                        Información de Entrenamiento (Opcional)
+                    </Typography>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+                        <FormControl fullWidth disabled={guardando}>
+                            <InputLabel>Cinta Actual</InputLabel>
+                            <Controller
+                                name="cintaActualId"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select {...field} label="Cinta Actual">
+                                        <MenuItem value="">
+                                            <em>Sin cinta asignada</em>
+                                        </MenuItem>
+                                        {cintas.map((cinta) => (
+                                            <MenuItem key={cinta.id} value={cinta.id}>
+                                                {cinta.nombre}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                )}
+                            />
+                        </FormControl>
+                        <FormControl fullWidth disabled={guardando}>
+                            <InputLabel>Clase/Horario</InputLabel>
+                            <Controller
+                                name="claseId"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select {...field} label="Clase/Horario">
+                                        <MenuItem value="">
+                                            <em>Sin clase asignada</em>
+                                        </MenuItem>
+                                        {clases.map((clase) => (
+                                            <MenuItem key={clase.id} value={clase.id}>
+                                                {clase.nombre} - {clase.dias}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                )}
+                            />
+                        </FormControl>
+                        <FormControl fullWidth disabled={guardando} sx={{ gridColumn: "span 2" }}>
+                            <InputLabel>Mensualidad Contratada</InputLabel>
+                            <Controller
+                                name="conceptoMensualidadId"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select {...field} label="Mensualidad Contratada">
+                                        <MenuItem value="">
+                                            <em>Sin mensualidad</em>
+                                        </MenuItem>
+                                        {conceptos.map((concepto) => (
+                                            <MenuItem key={concepto.id} value={concepto.id}>
+                                                {concepto.nombre} - ${concepto.precio}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                )}
+                            />
+                        </FormControl>
+                    </Box>
                 </DialogContent>
                 <DialogActions sx={{ p: 2 }}>
                     <Button onClick={handleClose} variant="outlined" disabled={guardando}>

@@ -1,20 +1,22 @@
-
-
-.btn-agregar {
-    background-color: #28a745; /* Verde */
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    margin-bottom: 20px;
+.pagos-container {
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
-.btn-agregar:hover {
-    background-color: #218838;
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #d32f2f;
+    margin: 0;
 }
 
-.tabla-container {
-    overflow-x: auto; 
+@media (max-width: 768px) {
+    .pagos-container {
+        padding: 16px;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+    }
 }

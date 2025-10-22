@@ -1,30 +1,38 @@
 import { Route, Routes } from "react-router-dom";
 import Layout from "./Components/layout/Layout";
 import Login from "./pages/Login/Login";
-import Sucursales from "./pages/Sucursales/Sucursales";
 import Usuarios from "./pages/Usuarios/Usuarios";
 import Socios from "./pages/Socios/Socios";
 import Membresias from "./pages/Membresias/Membresias";
+import Pagos from "./pages/Pagos/Pagos";
+import Clases from "./pages/Clases/Clases";
 import RutaPrivada from "./Components/RutaPrivada";
+import ErrorBoundary from "./Components/ErrorBoundary";
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
+    <ErrorBoundary>
+      <Routes>
+        <Route path="/login" element={<Login />} />
 
-      <Route
-        path="/"
-        element={
-          <RutaPrivada>
-            <Layout />
-          </RutaPrivada>
-        }
-      >
-        <Route path="usuarios" element={<Usuarios />} />
-        <Route path="sucursales" element={<Sucursales />} />
-        <Route path="socios" element={<Socios />} />
-        <Route path="membresias" element={<Membresias />} />
-      </Route>
-    </Routes>
+        <Route
+          path="/"
+          element={
+            <RutaPrivada>
+              <Layout />
+            </RutaPrivada>
+          }
+        >
+          <Route path="usuarios" element={<Usuarios />} />
+          <Route path="alumnos" element={<Socios />} />
+          <Route path="socios" element={<Socios />} />
+          <Route path="conceptos" element={<Membresias />} />
+          <Route path="membresias" element={<Membresias />} />
+          <Route path="pagos" element={<Pagos />} />
+          <Route path="clases" element={<Clases />} />
+          <Route path="cintas" element={<div className="p-6"><h1></h1></div>} />
+        </Route>
+      </Routes>
+    </ErrorBoundary>
   );
 }

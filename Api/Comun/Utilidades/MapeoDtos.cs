@@ -1,61 +1,67 @@
 using Api.Comun.Modelos.Usuarios;
-using Api.Comun.Modelos.Socios;
-using Api.Comun.Modelos.Membresias;
+using Api.Comun.Modelos.Alumnos;
 using Api.Entidades;
 
 namespace Api.Comun.Utilidades;
 
 public static class MapeoDtos
 {
-    // Mapeo de Usuario (personal del gimnasio)
+    // Mapeo para Usuario
     public static BuscarUsuariosDto ConvertirDto(this Usuario usuario)
     {
-        return new BuscarUsuariosDto()
+        return new BuscarUsuariosDto
         {
-            Slug = usuario.Slug,
+            Id = usuario.Id,
             Nombre = usuario.Nombre,
             ApellidoPaterno = usuario.ApellidoPaterno,
             ApellidoMaterno = usuario.ApellidoMaterno,
             NombreUsuario = usuario.NombreUsuario,
+            Rol = usuario.Rol,
             Habilitado = usuario.Habilitado,
+            Slug = usuario.Slug
         };
     }
 
-    // Mapeo de Socio (miembros del gimnasio)
-    public static BuscarSocioDto ConvertirDto(this Socio socio)
+    // Mapeo para Alumno
+    public static BuscarAlumnoDto ConvertirDto(this Alumno alumno)
     {
-        var membresiaActiva = socio.SocioMembresias?.FirstOrDefault(sm => sm.Activa);
+        var edad = alumno.ObtenerEdad();
 
-        return new BuscarSocioDto()
+        // Construir horario de clase si existe
+        string? claseHorario = null;
+        if (alumno.Clase != null)
         {
-            Slug = socio.Slug,
-            Nombre = socio.Nombre,
-            ApellidoPaterno = socio.ApellidoPaterno,
-            ApellidoMaterno = socio.ApellidoMaterno,
-            Email = socio.Email,
-            Telefono = socio.Telefono,
-            FechaNacimiento = socio.FechaNacimiento,
-            Direccion = socio.Direccion,
-            Habilitado = socio.Activo,
-            SucursalId = socio.SucursalId,
-            NombreSucursal = socio.Sucursal?.Nombre ?? "",
-            MembresiaActual = membresiaActiva?.Membresia?.Nombre,
-            FechaFinMembresia = membresiaActiva?.FechaFin,
-            MembresiaActiva = membresiaActiva?.Activa ?? false
+            claseHorario = $"{alumno.Clase.Dias} {alumno.Clase.HoraInicio:hh\\:mm} - {alumno.Clase.HoraFin:hh\\:mm}";
+        }
+
+        return new BuscarAlumnoDto
+        {
+            Id = alumno.Id,
+            Nombre = alumno.Nombre,
+            ApellidoPaterno = alumno.ApellidoPaterno,
+            ApellidoMaterno = alumno.ApellidoMaterno,
+            NombreCompleto = $"{alumno.Nombre} {alumno.ApellidoPaterno} {alumno.ApellidoMaterno}",
+            FechaNacimiento = alumno.FechaNacimiento,
+            Edad = edad,
+            Direccion = alumno.Direccion,
+            Sexo = alumno.Sexo,
+            NombreTutor = alumno.NombreTutor,
+            TelefonoTutor = alumno.TelefonoTutor,
+            EmailTutor = alumno.EmailTutor,
+            CintaActualId = alumno.CintaActualId,
+            CintaActualNombre = alumno.CintaActual?.Nombre,
+            CintaActualColor = alumno.CintaActual?.ColorHex,
+            ClaseId = alumno.ClaseId,
+            ClaseNombre = alumno.Clase?.Nombre,
+            ClaseHorario = claseHorario,
+            ConceptoMensualidadId = alumno.ConceptoMensualidadId,
+            ConceptoMensualidadNombre = alumno.ConceptoMensualidad?.Nombre,
+            ConceptoMensualidadMonto = alumno.ConceptoMensualidad?.Precio,
+            Activo = alumno.Activo,
+            FechaInscripcion = alumno.FechaInscripcion,
+            Slug = alumno.Slug
         };
     }
 
-    // Mapeo de Membresía
-    public static BuscarMembresiaDto ConvertirDto(this Membresia membresia)
-    {
-        return new BuscarMembresiaDto()
-        {
-            Slug = membresia.Slug,
-            Nombre = membresia.Nombre,
-            Precio = membresia.Precio,
-            DuracionDias = membresia.DuracionDias,
-            Descripcion = membresia.Descripcion,
-            Activa = membresia.Activa
-        };
-    }
+    // TODO: Agregar mapeos para Cinta, Clase, Concepto, Pago, etc.
 }
