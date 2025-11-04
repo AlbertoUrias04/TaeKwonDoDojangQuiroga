@@ -12,11 +12,6 @@ import {
   FormHelperText,
   CircularProgress,
   InputAdornment,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-  FormLabel,
-  Box,
   Chip,
 } from "@mui/material";
 import { useState, useEffect } from "react";
@@ -28,35 +23,28 @@ import api from "../../services/api";
 import { registrarPago } from "../../services/pagosService";
 
 const esquema = yup.object().shape({
-  socioId: yup
+  alumnoId: yup
     .number()
-    .required("El socio es obligatorio")
-    .positive("Selecciona un socio"),
-  membresiaId: yup
+    .required("El alumno es obligatorio")
+    .positive("Selecciona un alumno"),
+  conceptoId: yup
     .number()
-    .required("La membresía es obligatoria")
-    .positive("Selecciona una membresía"),
+    .required("El concepto es obligatorio")
+    .positive("Selecciona un concepto"),
   monto: yup
     .number()
     .required("El monto es obligatorio")
     .positive("El monto debe ser positivo")
     .min(1, "El monto debe ser mayor a 0"),
   metodoPago: yup.string().required("El método de pago es obligatorio"),
-  sucursalId: yup
-    .number()
-    .required("La sucursal es obligatoria")
-    .positive("Selecciona una sucursal"),
   referencia: yup.string().nullable(),
+  notas: yup.string().nullable(),
 });
 
 export default function ModalPago({ abierto, cerrar, recargar }) {
   const [guardando, setGuardando] = useState(false);
-  const [socios, setSocios] = useState([]);
-  const [todasMembresias, setTodasMembresias] = useState([]);
-  const [membresiasDelSocio, setMembresiasDelSocio] = useState([]);
-  const [sucursales, setSucursales] = useState([]);
-  const [socioSeleccionado, setSocioSeleccionado] = useState(null);
-  const [tipoSeleccion, setTipoSeleccion] = useState("nueva"); // "existente" o "nueva"
+  const [alumnos, setAlumnos] = useState([]);
+  const [conceptos, setConceptos] = useState([]);
 
   const {
     register,
@@ -69,196 +57,86 @@ export default function ModalPago({ abierto, cerrar, recargar }) {
   } = useForm({
     resolver: yupResolver(esquema),
     defaultValues: {
-      socioId: "",
-      membresiaId: "",
+      alumnoId: "",
+      conceptoId: "",
       monto: "",
       metodoPago: "",
-      sucursalId: "",
       referencia: "",
+      notas: "",
     },
   });
 
-  const socioIdWatch = watch("socioId");
-  const membresiaIdWatch = watch("membresiaId");
+  const conceptoIdWatch = watch("conceptoId");
 
   useEffect(() => {
     if (abierto) {
-      cargarSocios();
-      cargarSucursales();
-      cargarTodasMembresias();
+      cargarAlumnos();
+      cargarConceptos();
     }
   }, [abierto]);
 
   useEffect(() => {
-    if (socioIdWatch) {
-      cargarMembresiasDelSocio(socioIdWatch);
-    } else {
-      setMembresiasDelSocio([]);
-      setValue("membresiaId", "");
-      setValue("monto", "");
-      setTipoSeleccion("nueva");
-    }
-  }, [socioIdWatch]);
-
-  useEffect(() => {
-    if (membresiaIdWatch) {
+    if (conceptoIdWatch) {
       actualizarMonto();
     }
-  }, [membresiaIdWatch, tipoSeleccion]);
+  }, [conceptoIdWatch]);
 
-  const cargarSocios = async () => {
+  const cargarAlumnos = async () => {
     try {
-      const res = await api.get("/socios?habilitado=true");
-      setSocios(res.data || []);
+      const res = await api.get("/alumnos?activo=true");
+      setAlumnos(res.data || []);
     } catch (error) {
-      console.error("Error al cargar socios:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "No se pudieron cargar los socios",
+        text: "No se pudieron cargar los alumnos",
         confirmButtonColor: "#d32f2f",
       });
     }
   };
 
-  const cargarTodasMembresias = async () => {
+  const cargarConceptos = async () => {
     try {
-      const res = await api.get("/membresias?activa=true");
-      setTodasMembresias(res.data || []);
+      const res = await api.get("/conceptos?activo=true");
+      setConceptos(res.data || []);
     } catch (error) {
-      console.error("Error al cargar membresías:", error);
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "No se pudieron cargar las membresías",
-        confirmButtonColor: "#d32f2f",
-      });
-    }
-  };
-
-  const cargarMembresiasDelSocio = async (socioId) => {
-    try {
-      const socio = socios.find((s) => s.id === socioId);
-      setSocioSeleccionado(socio);
-
-      // Obtener el socio completo con sus membresías
-      const res = await api.get(`/socios/${socio.slug}`);
-      const socioCompleto = res.data;
-
-      // Obtener las membresías activas del socio
-      const membresiasActivas = socioCompleto.socioMembresias?.filter(
-        (sm) => sm.activa
-      ) || [];
-
-      setMembresiasDelSocio(membresiasActivas);
-
-      // Si tiene membresías activas, sugerir tipo "existente"
-      if (membresiasActivas.length > 0) {
-        setTipoSeleccion("existente");
-      } else {
-        setTipoSeleccion("nueva");
-      }
-    } catch (error) {
-      console.error("Error al cargar membresías del socio:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "No se pudieron cargar las membresías del socio",
-        confirmButtonColor: "#d32f2f",
-      });
-    }
-  };
-
-  const cargarSucursales = async () => {
-    try {
-      const res = await api.get("/sucursales?habilitado=true");
-      setSucursales(res.data || []);
-    } catch (error) {
-      console.error("Error al cargar sucursales:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "No se pudieron cargar las sucursales",
+        text: "No se pudieron cargar los conceptos",
         confirmButtonColor: "#d32f2f",
       });
     }
   };
 
   const actualizarMonto = () => {
-    if (!membresiaIdWatch) return;
+    if (!conceptoIdWatch) return;
 
-    if (tipoSeleccion === "existente") {
-      const socioMembresia = membresiasDelSocio.find(
-        (sm) => sm.id === membresiaIdWatch
-      );
-      if (socioMembresia) {
-        setValue("monto", socioMembresia.membresia.precio);
-      }
-    } else {
-      const membresia = todasMembresias.find((m) => m.id === membresiaIdWatch);
-      if (membresia) {
-        setValue("monto", membresia.precio);
-      }
+    const concepto = conceptos.find((c) => c.id === conceptoIdWatch);
+    if (concepto) {
+      setValue("monto", concepto.precio);
     }
   };
 
   const handleClose = () => {
     if (!guardando) {
       reset();
-      setMembresiasDelSocio([]);
-      setSocioSeleccionado(null);
-      setTipoSeleccion("nueva");
       cerrar();
     }
-  };
-
-  const handleTipoChange = (event) => {
-    setTipoSeleccion(event.target.value);
-    setValue("membresiaId", "");
-    setValue("monto", "");
   };
 
   const onSubmit = async (data) => {
     setGuardando(true);
 
     try {
-      let socioMembresiaId;
-
-      // Si es una membresía nueva, primero crear la asociación SocioMembresia
-      if (tipoSeleccion === "nueva") {
-        const membresia = todasMembresias.find((m) => m.id === data.membresiaId);
-
-        // Crear SocioMembresia
-        const fechaInicio = new Date();
-        const fechaFin = new Date();
-        fechaFin.setDate(fechaFin.getDate() + membresia.duracionDias);
-
-        const socioMembresiaData = {
-          socioId: data.socioId,
-          membresiaId: data.membresiaId,
-          fechaInicio: fechaInicio.toISOString(),
-          fechaFin: fechaFin.toISOString(),
-          activa: true,
-        };
-
-        const resSocioMembresia = await api.post(
-          "/socio-membresias",
-          socioMembresiaData
-        );
-        socioMembresiaId = resSocioMembresia.data.id || resSocioMembresia.data;
-      } else {
-        // Si es una membresía existente, usar el ID directamente
-        socioMembresiaId = data.membresiaId;
-      }
-
-      // Crear el pago
       const pagoData = {
-        socioId: data.socioId,
-        socioMembresiaId: socioMembresiaId,
-        monto: data.monto,
+        alumnoId: data.alumnoId,
+        conceptoId: data.conceptoId,
+        monto: parseFloat(data.monto),
         metodoPago: data.metodoPago,
-        sucursalId: data.sucursalId,
-        referencia: data.referencia,
+        referencia: data.referencia || null,
+        notas: data.notas || null,
+        alumnoInscripcionId: null,
       };
 
       await registrarPago(pagoData);
@@ -266,21 +144,14 @@ export default function ModalPago({ abierto, cerrar, recargar }) {
       Swal.fire({
         icon: "success",
         title: "Pago registrado",
-        text: tipoSeleccion === "nueva"
-          ? "El pago se ha registrado y la membresía ha sido asignada al socio"
-          : "El pago se ha registrado exitosamente",
+        text: "El pago se ha registrado exitosamente",
         confirmButtonColor: "#d32f2f",
       });
 
       reset();
-      setMembresiasDelSocio([]);
-      setSocioSeleccionado(null);
-      setTipoSeleccion("nueva");
       cerrar();
       recargar();
     } catch (error) {
-      console.error("Error al registrar pago:", error);
-
       let mensajeError = "Ocurrió un error inesperado al registrar el pago";
       let detalles = "";
 
@@ -294,7 +165,7 @@ export default function ModalPago({ abierto, cerrar, recargar }) {
           mensajeError = "Datos no encontrados";
           detalles =
             error.response.data?.message ||
-            "El socio, membresía o sucursal no existe";
+            "El alumno o concepto no existe";
         } else {
           mensajeError = "Error del servidor";
           detalles = "No se pudo registrar el pago. Intenta nuevamente.";
@@ -316,9 +187,6 @@ export default function ModalPago({ abierto, cerrar, recargar }) {
     }
   };
 
-  const membresiasDisponibles =
-    tipoSeleccion === "existente" ? membresiasDelSocio : todasMembresias;
-
   return (
     <Dialog
       open={abierto}
@@ -335,108 +203,69 @@ export default function ModalPago({ abierto, cerrar, recargar }) {
           <FormControl
             fullWidth
             margin="normal"
-            error={!!errors.socioId}
+            error={!!errors.alumnoId}
             disabled={guardando}
           >
-            <InputLabel>Socio</InputLabel>
+            <InputLabel>Alumno</InputLabel>
             <Controller
-              name="socioId"
+              name="alumnoId"
               control={control}
               render={({ field }) => (
-                <Select {...field} label="Socio">
+                <Select {...field} label="Alumno">
                   <MenuItem value="">
-                    <em>Selecciona un socio</em>
+                    <em>Selecciona un alumno</em>
                   </MenuItem>
-                  {socios.map((socio) => (
-                    <MenuItem key={socio.id} value={socio.id}>
-                      {socio.nombre} {socio.apellidoPaterno}{" "}
-                      {socio.apellidoMaterno}
+                  {alumnos.map((alumno) => (
+                    <MenuItem key={alumno.id} value={alumno.id}>
+                      {alumno.nombre} {alumno.apellidoPaterno}{" "}
+                      {alumno.apellidoMaterno}
+                      {alumno.cintaActual && (
+                        <Chip
+                          label={alumno.cintaActual}
+                          size="small"
+                          sx={{ ml: 1 }}
+                        />
+                      )}
                     </MenuItem>
                   ))}
                 </Select>
               )}
             />
-            {errors.socioId && (
-              <FormHelperText>{errors.socioId?.message}</FormHelperText>
+            {errors.alumnoId && (
+              <FormHelperText>{errors.alumnoId?.message}</FormHelperText>
             )}
           </FormControl>
-
-          {socioIdWatch && (
-            <Box sx={{ mt: 2, mb: 2 }}>
-              <FormControl component="fieldset" disabled={guardando}>
-                <FormLabel component="legend">Tipo de membresía</FormLabel>
-                <RadioGroup
-                  row
-                  value={tipoSeleccion}
-                  onChange={handleTipoChange}
-                >
-                  {membresiasDelSocio.length > 0 && (
-                    <FormControlLabel
-                      value="existente"
-                      control={<Radio />}
-                      label={
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                          Renovar membresía activa
-                          <Chip
-                            label={membresiasDelSocio.length}
-                            size="small"
-                            color="primary"
-                          />
-                        </Box>
-                      }
-                    />
-                  )}
-                  <FormControlLabel
-                    value="nueva"
-                    control={<Radio />}
-                    label="Asignar nueva membresía"
-                  />
-                </RadioGroup>
-              </FormControl>
-            </Box>
-          )}
 
           <FormControl
             fullWidth
             margin="normal"
-            error={!!errors.membresiaId}
-            disabled={guardando || !socioIdWatch}
+            error={!!errors.conceptoId}
+            disabled={guardando}
           >
-            <InputLabel>Membresía</InputLabel>
+            <InputLabel>Concepto</InputLabel>
             <Controller
-              name="membresiaId"
+              name="conceptoId"
               control={control}
               render={({ field }) => (
-                <Select {...field} label="Membresía">
+                <Select {...field} label="Concepto">
                   <MenuItem value="">
-                    <em>Selecciona una membresía</em>
+                    <em>Selecciona un concepto</em>
                   </MenuItem>
-                  {tipoSeleccion === "existente"
-                    ? membresiasDelSocio.map((sm) => (
-                        <MenuItem key={sm.id} value={sm.id}>
-                          {sm.membresia.nombre} - $
-                          {sm.membresia.precio.toFixed(2)}
-                          {sm.activa && (
-                            <Chip
-                              label="Activa"
-                              size="small"
-                              color="success"
-                              sx={{ ml: 1 }}
-                            />
-                          )}
-                        </MenuItem>
-                      ))
-                    : todasMembresias.map((m) => (
-                        <MenuItem key={m.id} value={m.id}>
-                          {m.nombre} - ${m.precio.toFixed(2)} ({m.duracionDias}{" "}
-                          días)
-                        </MenuItem>
-                      ))}
+                  {conceptos.map((concepto) => (
+                    <MenuItem key={concepto.id} value={concepto.id}>
+                      {concepto.nombre} - ${concepto.precio.toFixed(2)}
+                      <Chip
+                        label={concepto.tipoConcepto}
+                        size="small"
+                        sx={{ ml: 1 }}
+                      />
+                    </MenuItem>
+                  ))}
                 </Select>
               )}
             />
-            {errors.membresiaId && (
-              <FormHelperText>{errors.membresiaId?.message}</FormHelperText>
+            {errors.conceptoId && (
+              <FormHelperText>{errors.conceptoId?.message}</FormHelperText>
             )}
           </FormControl>
 
@@ -486,34 +315,6 @@ export default function ModalPago({ abierto, cerrar, recargar }) {
             )}
           </FormControl>
 
-          <FormControl
-            fullWidth
-            margin="normal"
-            error={!!errors.sucursalId}
-            disabled={guardando}
-          >
-            <InputLabel>Sucursal</InputLabel>
-            <Controller
-              name="sucursalId"
-              control={control}
-              render={({ field }) => (
-                <Select {...field} label="Sucursal">
-                  <MenuItem value="">
-                    <em>Selecciona una sucursal</em>
-                  </MenuItem>
-                  {sucursales.map((sucursal) => (
-                    <MenuItem key={sucursal.id} value={sucursal.id}>
-                      {sucursal.nombre}
-                    </MenuItem>
-                  ))}
-                </Select>
-              )}
-            />
-            {errors.sucursalId && (
-              <FormHelperText>{errors.sucursalId?.message}</FormHelperText>
-            )}
-          </FormControl>
-
           <TextField
             label="Referencia (Opcional)"
             fullWidth
@@ -521,6 +322,21 @@ export default function ModalPago({ abierto, cerrar, recargar }) {
             error={!!errors.referencia}
             helperText={
               errors.referencia?.message || "Número de transacción, folio, etc."
+            }
+            margin="normal"
+            disabled={guardando}
+          />
+
+          <TextField
+            label="Notas (Opcional)"
+            fullWidth
+            multiline
+            rows={3}
+            {...register("notas")}
+            error={!!errors.notas}
+            helperText={
+              errors.notas?.message ||
+              "Información adicional (ej: Aprobó examen Cinta Azul)"
             }
             margin="normal"
             disabled={guardando}

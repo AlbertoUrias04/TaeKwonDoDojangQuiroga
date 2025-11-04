@@ -28,7 +28,13 @@
       "Bash(dotnet clean)",
       "Bash(dotnet user-secrets:*)",
       "Bash(dir /s /b \"C:\\Users\\Hector\\Documents\\GitHub\\ControlFitnessGym\\Api\\Comun\\Modelos\")",
-      "Bash(cmd /c \"dir /s /b C:\\Users\\Hector\\Documents\\GitHub\\ControlFitnessGym\\Api\\Comun\\Modelos | findstr Dto.cs\")"
+      "Bash(cmd /c \"dir /s /b C:\\Users\\Hector\\Documents\\GitHub\\ControlFitnessGym\\Api\\Comun\\Modelos | findstr Dto.cs\")",
+      "Bash(dir /s /b \"C:\\Users\\Hector\\Documents\\GitHub\\ControlFitnessGym\")",
+      "Bash(npm run build:*)",
+      "Bash(npm start)",
+      "Bash(powershell -Command:*)",
+      "Bash(dir /s /b \"C:\\Users\\Hector\\Documents\\GitHub\\ControlFitnessGym\\Api\")",
+      "Bash(cmd /c \"dir /s /b C:\\Users\\Hector\\Documents\\GitHub\\ControlFitnessGym\\Api | findstr \\.old\")"
     ],
     "deny": [],
     "ask": []

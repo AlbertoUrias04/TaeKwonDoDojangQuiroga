@@ -44,7 +44,8 @@
         font-size: 1.75rem;
         font-weight: bold;
         letter-spacing: 0.05em;
-        margin-bottom: 1.5rem;
+        line-height: 1.3;
+        padding: 0 0.5rem;
     }
 
     .sidebar nav a {
@@ -85,10 +86,46 @@
             display: none;
         }
 
-    .sidebar.closed h2,
-    .sidebar.closed button span {
+    .sidebar.closed h2 {
         display: none;
     }
+
+    .sidebar.closed .logout-button span {
+        display: none;
+    }
+
+    /* Centrar el botón hamburguesa cuando está cerrado */
+    .sidebar.closed .menu-toggle-button {
+        margin: 0 auto;
+    }
+
+/* Header del sidebar */
+.sidebar-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+}
+
+    .sidebar-header h2 {
+        margin: 0;
+        width: 100%;
+        text-align: center;
+    }
+
+/* Contenedor del botón */
+.button-container {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    padding-left: 0.5rem;
+}
+
+.button-container-closed {
+    justify-content: center;
+    padding-left: 0;
+}
 
 /* Bot�n cerrar sesi�n */
 .logout-button {
@@ -126,4 +163,48 @@
     .sidebar-link:hover {
         color: #ffcb05;
         background-color: rgba(255, 255, 255, 0.1);
+    }
+
+/* Botón hamburguesa sutil y elegante */
+.menu-toggle-button {
+    background: transparent;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    border-radius: 6px;
+}
+
+    .menu-toggle-button:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .menu-toggle-button:focus {
+        outline: none;
+    }
+
+/* Hamburguesa de 3 rayas */
+.hamburger {
+    width: 24px;
+    height: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+    .hamburger span {
+        display: block;
+        height: 2.5px;
+        width: 100%;
+        background: white;
+        border-radius: 2px;
+        transition: all 0.2s ease;
+    }
+
+    /* Efecto sutil al hover */
+    .menu-toggle-button:hover .hamburger span {
+        background: #ffcb05;
     }

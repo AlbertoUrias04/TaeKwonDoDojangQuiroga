@@ -161,22 +161,23 @@ namespace Api.Migrations
                     b.Property<int>("ClaseId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("FechaHoraEntrada")
+                    b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("FechaHoraSalida")
-                        .HasColumnType("datetime2");
+                    b.Property<bool>("Presente")
+                        .HasColumnType("bit");
 
                     b.Property<int>("UsuarioRegistroId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AlumnoId");
-
                     b.HasIndex("ClaseId");
 
                     b.HasIndex("UsuarioRegistroId");
+
+                    b.HasIndex("AlumnoId", "ClaseId", "Fecha")
+                        .IsUnique();
 
                     b.ToTable("Asistencias", (string)null);
                 });

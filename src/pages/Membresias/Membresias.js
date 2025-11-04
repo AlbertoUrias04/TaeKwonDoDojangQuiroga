@@ -53,8 +53,6 @@ export default function Membresias() {
       const res = await api.get("/conceptos");
       setMembresias(res.data || []);
     } catch (error) {
-      console.error("Error al cargar conceptos:", error);
-
       let mensajeError = "Ocurrió un error inesperado al cargar las membresías.";
 
       if (error.response) {
@@ -173,7 +171,6 @@ export default function Membresias() {
           });
           cargarMembresias();
         } catch (error) {
-          console.error("Error al eliminar concepto:", error);
           let mensajeError = "No se pudo eliminar el concepto";
 
           if (error.response?.status === 404) {

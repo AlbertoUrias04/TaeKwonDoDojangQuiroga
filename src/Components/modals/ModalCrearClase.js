@@ -120,8 +120,6 @@ export default function ModalCrearClase({ abierto, cerrar, recargar }) {
             cerrar();
             recargar();
         } catch (error) {
-            console.error("Error al guardar clase:", error);
-
             let mensajeError = "Ocurrió un error inesperado al guardar la clase";
             let detalles = "";
 

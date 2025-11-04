@@ -137,8 +137,6 @@ export default function ModalEditarClase({ abierto, cerrar, recargar, clase }) {
             cerrar();
             recargar();
         } catch (error) {
-            console.error("Error al actualizar clase:", error);
-
             let mensajeError = "Ocurrió un error inesperado";
             let detalles = "";
 

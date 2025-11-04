@@ -5,8 +5,8 @@ namespace Api.Entidades;
 public class Asistencia
 {
     public int Id { get; set; }
-    public DateTime FechaHoraEntrada { get; set; }
-    public DateTime? FechaHoraSalida { get; set; }
+    public DateTime Fecha { get; set; }
+    public bool Presente { get; set; }
 
     public int AlumnoId { get; set; }
     [JsonIgnore]

@@ -98,8 +98,6 @@ export default function ModalCrearMembresia({ abierto, cerrar, recargar }) {
             cerrar();
             recargar();
         } catch (error) {
-            console.error("Error al guardar membresía:", error);
-
             let mensajeError = "Ocurrió un error inesperado al guardar la membresía";
             let detalles = "";
 

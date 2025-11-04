@@ -43,6 +43,17 @@ export default function Socios() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
 
+  // Función para determinar si un color es claro u oscuro
+  const esColorClaro = (hexColor) => {
+    if (!hexColor) return false;
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    const brightness = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return brightness > 155;
+  };
+
   // Filtros avanzados
   const [filtroEstado, setFiltroEstado] = useState("");
   const [filtroCinta, setFiltroCinta] = useState("");
@@ -66,8 +77,6 @@ export default function Socios() {
       const res = await api.get("/alumnos");
       setSocios(res.data || []);
     } catch (error) {
-      console.error("Error al cargar alumnos:", error);
-
       let mensajeError = "Ocurrió un error inesperado al cargar los alumnos.";
 
       if (error.response) {
@@ -97,15 +106,11 @@ export default function Socios() {
         api.get("/conceptos?activo=true&tipoConcepto=Mensualidad"),
       ]);
 
-      console.log("Cintas cargadas:", resCintas.data);
-      console.log("Clases cargadas:", resClases.data);
-      console.log("Conceptos cargados:", resConceptos.data);
-
       setCintas(resCintas.data || []);
       setClases(resClases.data || []);
       setConceptos(resConceptos.data || []);
     } catch (error) {
-      console.error("Error al cargar datos de filtros:", error);
+      // Error al cargar datos de filtros
     }
   };
 
@@ -475,7 +480,8 @@ export default function Socios() {
                             size="small"
                             sx={{
                               backgroundColor: alumno.cintaActualColor || "#666",
-                              color: "white",
+                              color: esColorClaro(alumno.cintaActualColor) ? "#000" : "#fff",
+                              fontWeight: 600,
                             }}
                           />
                         ) : (

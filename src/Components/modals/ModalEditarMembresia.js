@@ -109,8 +109,6 @@ export default function ModalEditarMembresia({ abierto, cerrar, recargar, membre
             cerrar();
             recargar();
         } catch (error) {
-            console.error("Error al actualizar membresía:", error);
-
             let mensajeError = "Ocurrió un error inesperado";
             let detalles = "";
 
