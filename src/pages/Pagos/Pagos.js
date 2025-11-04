@@ -28,7 +28,6 @@ import { Search, Clear, PaymentRounded, AttachMoney, TrendingUp } from "@mui/ico
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { obtenerPagos, eliminarPago, obtenerEstadisticasPagos } from "../../services/pagosService";
-import api from "../../services/api";
 import ModalPago from "../../Components/modals/ModalPago";
 import "./Pagos.css";
 
@@ -36,35 +35,21 @@ export default function Pagos() {
   const [pagos, setPagos] = useState([]);
   const [filtro, setFiltro] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("");
-  const [sucursalFiltro, setSucursalFiltro] = useState("");
   const [pagina, setPagina] = useState(1);
   const [filtrados, setFiltrados] = useState([]);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
-  const [sucursales, setSucursales] = useState([]);
   const [estadisticas, setEstadisticas] = useState(null);
 
   const itemsPorPagina = 10;
 
-  const cargarSucursales = async () => {
-    try {
-      const res = await api.get("/sucursales?habilitado=true");
-      setSucursales(res.data || []);
-    } catch (error) {
-      console.error("Error al cargar sucursales:", error);
-    }
-  };
-
   const cargarEstadisticas = async () => {
     try {
-      const filtros = {};
-      if (sucursalFiltro) filtros.sucursalId = sucursalFiltro;
-
-      const data = await obtenerEstadisticasPagos(filtros);
+      const data = await obtenerEstadisticasPagos();
       setEstadisticas(data);
     } catch (error) {
-      console.error("Error al cargar estadísticas:", error);
+      // Error al cargar estadísticas
     }
   };
 
@@ -75,13 +60,10 @@ export default function Pagos() {
     try {
       const filtros = {};
       if (estadoFiltro) filtros.estado = estadoFiltro;
-      if (sucursalFiltro) filtros.sucursalId = sucursalFiltro;
 
       const data = await obtenerPagos(filtros);
       setPagos(data || []);
     } catch (error) {
-      console.error("Error al cargar pagos:", error);
-
       let mensajeError = "Ocurrió un error inesperado al cargar los pagos.";
 
       if (error.response) {
@@ -104,17 +86,16 @@ export default function Pagos() {
   };
 
   useEffect(() => {
-    cargarSucursales();
     cargarPagos();
-  }, [estadoFiltro, sucursalFiltro]);
+  }, [estadoFiltro]);
 
   useEffect(() => {
     cargarEstadisticas();
-  }, [pagos, sucursalFiltro]);
+  }, [pagos]);
 
   useEffect(() => {
     const datosFiltrados = pagos.filter((p) =>
-      [p.socioNombre, p.membresiaNombre, p.metodoPago, p.referencia]
+      [p.alumnoNombre, p.conceptoNombre, p.metodoPago, p.referencia]
         .join(" ")
         .toLowerCase()
         .includes(filtro.toLowerCase())
@@ -232,7 +213,7 @@ export default function Pagos() {
                   </Typography>
                 </Box>
                 <Typography variant="h4" sx={{ mt: 1, color: "#1976d2" }}>
-                  {formatearMonto(estadisticas.montoTotal)}
+                  {formatearMonto(estadisticas.totalMonto)}
                 </Typography>
               </CardContent>
             </Card>
@@ -281,7 +262,7 @@ export default function Pagos() {
 
       <Box sx={{ mb: 2, display: "flex", gap: 2, flexWrap: "wrap" }}>
         <TextField
-          placeholder="Buscar por socio, membresía o referencia..."
+          placeholder="Buscar por alumno, concepto o referencia..."
           variant="outlined"
           size="small"
           sx={{ flex: 1, minWidth: "250px" }}
@@ -316,22 +297,6 @@ export default function Pagos() {
             <MenuItem value="Rechazado">Rechazado</MenuItem>
           </Select>
         </FormControl>
-
-        <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel>Sucursal</InputLabel>
-          <Select
-            value={sucursalFiltro}
-            label="Sucursal"
-            onChange={(e) => setSucursalFiltro(e.target.value)}
-          >
-            <MenuItem value="">Todas</MenuItem>
-            {sucursales.map((sucursal) => (
-              <MenuItem key={sucursal.id} value={sucursal.id}>
-                {sucursal.nombre}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
       </Box>
 
       {error && (
@@ -354,10 +319,10 @@ export default function Pagos() {
                     Fecha
                   </TableCell>
                   <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                    Socio
+                    Alumno
                   </TableCell>
                   <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                    Membresía
+                    Concepto
                   </TableCell>
                   <TableCell sx={{ color: "white", fontWeight: "bold" }}>
                     Monto
@@ -371,6 +336,9 @@ export default function Pagos() {
                   <TableCell sx={{ color: "white", fontWeight: "bold" }}>
                     Referencia
                   </TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                    Notas
+                  </TableCell>
                   <TableCell
                     sx={{ color: "white", fontWeight: "bold" }}
                     align="center"
@@ -382,7 +350,7 @@ export default function Pagos() {
               <TableBody>
                 {datosPaginados.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} align="center">
+                    <TableCell colSpan={9} align="center">
                       No se encontraron pagos
                     </TableCell>
                   </TableRow>
@@ -390,8 +358,17 @@ export default function Pagos() {
                   datosPaginados.map((pago) => (
                     <TableRow key={pago.id} hover>
                       <TableCell>{formatearFecha(pago.fecha)}</TableCell>
-                      <TableCell>{pago.socioNombre}</TableCell>
-                      <TableCell>{pago.membresiaNombre}</TableCell>
+                      <TableCell>{pago.alumnoNombre}</TableCell>
+                      <TableCell>
+                        {pago.conceptoNombre}
+                        {pago.tipoConcepto && (
+                          <Chip
+                            label={pago.tipoConcepto}
+                            size="small"
+                            sx={{ ml: 1 }}
+                          />
+                        )}
+                      </TableCell>
                       <TableCell sx={{ fontWeight: "bold" }}>
                         {formatearMonto(pago.monto)}
                       </TableCell>
@@ -404,6 +381,7 @@ export default function Pagos() {
                         />
                       </TableCell>
                       <TableCell>{pago.referencia || "N/A"}</TableCell>
+                      <TableCell>{pago.notas || "N/A"}</TableCell>
                       <TableCell align="center">
                         <Button
                           variant="outlined"

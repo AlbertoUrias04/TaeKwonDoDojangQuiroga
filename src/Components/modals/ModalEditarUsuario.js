@@ -118,8 +118,6 @@ export default function ModalEditarUsuario({ abierto, onClose, usuario, onActual
             handleClose();
             onActualizado();
         } catch (err) {
-            console.error("Error al actualizar usuario:", err);
-            
             let mensajeError = "Error al actualizar";
             let detalles = "Ocurrió un error inesperado al actualizar el usuario";
             

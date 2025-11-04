@@ -10,5 +10,9 @@ public class RegistrarAsistenciaDto
     [Required]
     public int ClaseId { get; set; }
 
-    public DateTime? FechaHoraSalida { get; set; }
+    [Required]
+    public DateTime Fecha { get; set; }
+
+    [Required]
+    public bool Presente { get; set; }
 }

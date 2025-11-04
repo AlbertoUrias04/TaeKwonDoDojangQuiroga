@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
-import ronnieImage from '../../Components/img/ronnie.jpg'; 
+import Taekwondo from '../../Components/img/Taekwondo.jpg'; 
 import './Login.css';
 
 const Login = () => {
@@ -43,7 +43,7 @@ const Login = () => {
    
         <div 
             className="login-wrapper" 
-            style={{ '--background-image': `url(${ronnieImage})` }}
+            style={{ '--background-image': `url(${Taekwondo})` }}
         >
             <div className="login-container">
                 <div className="login-header">

@@ -88,8 +88,6 @@ export default function ModalCrearUsuario({ abierto, onClose, onGuardado }) {
             onClose();
             onGuardado();
         } catch (error) {
-            console.error("Error al guardar usuario:", error);
-            
             let mensajeError = "Ocurrió un error inesperado al guardar el usuario";
             let detalles = "";
             

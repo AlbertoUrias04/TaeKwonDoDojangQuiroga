@@ -11,6 +11,16 @@ public class AsistenciaConfiguracion : IEntityTypeConfiguration<Asistencia>
         builder.ToTable("Asistencias");
         builder.HasKey(a => a.Id);
 
+        // Índice único para evitar duplicados (un alumno solo puede tener una asistencia por clase y fecha)
+        builder.HasIndex(a => new { a.AlumnoId, a.ClaseId, a.Fecha })
+            .IsUnique();
+
+        builder.Property(a => a.Fecha)
+            .IsRequired();
+
+        builder.Property(a => a.Presente)
+            .IsRequired();
+
         builder.HasOne(a => a.Alumno)
             .WithMany(al => al.Asistencias)
             .HasForeignKey(a => a.AlumnoId)

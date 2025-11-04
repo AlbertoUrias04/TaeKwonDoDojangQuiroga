@@ -120,11 +120,14 @@ export default function ModalCrearSocio({ abierto, cerrar, recargar }) {
                 api.get("/clases?activo=true"),
                 api.get("/conceptos?activo=true&tipoConcepto=Mensualidad"),
             ]);
-            setCintas(resCintas.data || []);
+
+            // Ordenar cintas por jerarquía (orden)
+            const cintasOrdenadas = (resCintas.data || []).sort((a, b) => a.orden - b.orden);
+
+            setCintas(cintasOrdenadas);
             setClases(resClases.data || []);
             setConceptos(resConceptos.data || []);
         } catch (error) {
-            console.error("Error al cargar datos:", error);
             Swal.fire({
                 icon: "error",
                 title: "Error",
@@ -168,8 +171,6 @@ export default function ModalCrearSocio({ abierto, cerrar, recargar }) {
             cerrar();
             recargar();
         } catch (error) {
-            console.error("Error al guardar alumno:", error);
-
             let mensajeError = "Ocurrió un error inesperado al guardar el alumno";
             let detalles = "";
 

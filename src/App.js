@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, Navigate } from "react-router-dom";
 import Layout from "./Components/layout/Layout";
 import Login from "./pages/Login/Login";
 import Usuarios from "./pages/Usuarios/Usuarios";
@@ -9,10 +9,16 @@ import Clases from "./pages/Clases/Clases";
 import RutaPrivada from "./Components/RutaPrivada";
 import ErrorBoundary from "./Components/ErrorBoundary";
 
+function RedirectToLoginOrAlumnos() {
+  const token = localStorage.getItem("token");
+  return token ? <Navigate to="/alumnos" replace /> : <Navigate to="/login" replace />;
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
       <Routes>
+        <Route path="/" element={<RedirectToLoginOrAlumnos />} />
         <Route path="/login" element={<Login />} />
 
         <Route
@@ -30,7 +36,6 @@ export default function App() {
           <Route path="membresias" element={<Membresias />} />
           <Route path="pagos" element={<Pagos />} />
           <Route path="clases" element={<Clases />} />
-          <Route path="cintas" element={<div className="p-6"><h1></h1></div>} />
         </Route>
       </Routes>
     </ErrorBoundary>

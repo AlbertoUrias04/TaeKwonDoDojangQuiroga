@@ -16,12 +16,14 @@ import {
   InputAdornment,
   IconButton,
 } from "@mui/material";
-import { Search, Clear, Add } from "@mui/icons-material";
+import { Search, Clear, Add, Visibility, CheckCircle } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { obtenerClases, eliminarClase } from "../../services/clasesService";
 import ModalCrearClase from "../../Components/modals/ModalCrearClase";
 import ModalEditarClase from "../../Components/modals/ModalEditarClase";
+import ModalVerAlumnosClase from "../../Components/modals/ModalVerAlumnosClase";
+import ModalPasarLista from "../../Components/modals/ModalPasarLista";
 import "./Clases.css";
 
 export default function Clases() {
@@ -31,7 +33,11 @@ export default function Clases() {
   const [filtrados, setFiltrados] = useState([]);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [modalEditarAbierto, setModalEditarAbierto] = useState(false);
+  const [modalVerAlumnosAbierto, setModalVerAlumnosAbierto] = useState(false);
+  const [modalPasarListaAbierto, setModalPasarListaAbierto] = useState(false);
   const [claseEditar, setClaseEditar] = useState(null);
+  const [claseVerAlumnos, setClaseVerAlumnos] = useState(null);
+  const [clasePasarLista, setClasePasarLista] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
 
@@ -45,8 +51,6 @@ export default function Clases() {
       const data = await obtenerClases();
       setClases(data || []);
     } catch (error) {
-      console.error("Error al cargar clases:", error);
-
       let mensajeError = "Ocurrió un error inesperado al cargar las clases.";
 
       if (error.response) {
@@ -91,6 +95,16 @@ export default function Clases() {
     setModalEditarAbierto(true);
   };
 
+  const abrirModalVerAlumnos = (clase) => {
+    setClaseVerAlumnos(clase);
+    setModalVerAlumnosAbierto(true);
+  };
+
+  const abrirModalPasarLista = (clase) => {
+    setClasePasarLista(clase);
+    setModalPasarListaAbierto(true);
+  };
+
   const limpiarFiltro = () => {
     setFiltro("");
   };
@@ -117,7 +131,6 @@ export default function Clases() {
           });
           cargarClases();
         } catch (error) {
-          console.error("Error al eliminar clase:", error);
           let mensajeError = "No se pudo eliminar la clase";
           let detalles = "";
 
@@ -275,7 +288,25 @@ export default function Clases() {
                         />
                       </TableCell>
                       <TableCell align="center">
-                        <Box sx={{ display: "flex", gap: 1, justifyContent: "center" }}>
+                        <Box sx={{ display: "flex", gap: 1, justifyContent: "center", flexWrap: "wrap" }}>
+                          <Button
+                            variant="outlined"
+                            color="warning"
+                            size="small"
+                            startIcon={<CheckCircle />}
+                            onClick={() => abrirModalPasarLista(clase)}
+                          >
+                            Pasar Lista
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            color="success"
+                            size="small"
+                            startIcon={<Visibility />}
+                            onClick={() => abrirModalVerAlumnos(clase)}
+                          >
+                            Ver Alumnos
+                          </Button>
                           <Button
                             variant="outlined"
                             color="primary"
@@ -328,6 +359,24 @@ export default function Clases() {
         }}
         recargar={cargarClases}
         clase={claseEditar}
+      />
+
+      <ModalVerAlumnosClase
+        abierto={modalVerAlumnosAbierto}
+        cerrar={() => {
+          setModalVerAlumnosAbierto(false);
+          setClaseVerAlumnos(null);
+        }}
+        clase={claseVerAlumnos}
+      />
+
+      <ModalPasarLista
+        abierto={modalPasarListaAbierto}
+        cerrar={() => {
+          setModalPasarListaAbierto(false);
+          setClasePasarLista(null);
+        }}
+        clase={clasePasarLista}
       />
     </div>
   );

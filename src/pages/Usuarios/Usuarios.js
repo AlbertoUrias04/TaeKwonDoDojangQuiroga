@@ -45,8 +45,6 @@ export default function Usuarios() {
       const res = await api.get("/usuarios");
       setUsuarios(res.data || []);
     } catch (error) {
-      console.error("Error al cargar usuarios:", error);
-      
       let mensajeError = "Ocurrió un error inesperado al cargar los usuarios.";
       
       if (error.response) {
@@ -113,7 +111,7 @@ export default function Usuarios() {
         slug: usuario.slug,
         habilitado: false,
       });
-      
+
       await Swal.fire({
         icon: "success",
         title: "Usuario deshabilitado",
@@ -122,11 +120,9 @@ export default function Usuarios() {
         timer: 2000,
         timerProgressBar: true,
       });
-      
+
       cargarUsuarios();
     } catch (error) {
-      console.error("Error al deshabilitar el usuario:", error);
-      
       let mensajeError = "Ocurrió un error al deshabilitar el usuario";
       
       if (error.response) {
