@@ -28,20 +28,29 @@ const esquema = yup.object().shape({
         .required("El nombre es obligatorio")
         .min(3, "El nombre debe tener al menos 3 caracteres")
         .max(100, "El nombre no puede exceder 100 caracteres"),
+    tipoConcepto: yup
+        .string()
+        .required("El tipo de concepto es obligatorio"),
     precio: yup
         .number()
         .required("El precio es obligatorio")
-        .positive("El precio debe ser mayor a 0")
+        .min(0, "El precio debe ser mayor o igual a 0")
         .max(999999, "El precio es demasiado alto"),
     duracionDias: yup
         .number()
-        .required("La duración es obligatoria")
-        .positive("La duración debe ser mayor a 0"),
+        .nullable()
+        .transform((value, originalValue) => originalValue === "" ? null : value)
+        .min(0, "La duración debe ser mayor o igual a 0")
+        .when('tipoConcepto', {
+            is: 'Mensualidad',
+            then: (schema) => schema.required("La duración es obligatoria para mensualidades").positive("La duración debe ser mayor a 0"),
+            otherwise: (schema) => schema.notRequired()
+        }),
     descripcion: yup
         .string()
         .max(500, "La descripción no puede exceder 500 caracteres")
         .nullable(),
-    activa: yup.boolean(),
+    activo: yup.boolean(),
 });
 
 const duracionesPreestablecidas = [
@@ -55,6 +64,14 @@ const duracionesPreestablecidas = [
     { valor: 365, etiqueta: "1 año" },
 ];
 
+const tiposConcepto = [
+    { valor: "Mensualidad", etiqueta: "Mensualidad" },
+    { valor: "Inscripcion", etiqueta: "Inscripción" },
+    { valor: "Examen", etiqueta: "Examen" },
+    { valor: "Uniforme", etiqueta: "Uniforme" },
+    { valor: "Otro", etiqueta: "Otro" },
+];
+
 export default function ModalEditarMembresia({ abierto, cerrar, recargar, membresia }) {
     const [guardando, setGuardando] = useState(false);
 
@@ -63,19 +80,23 @@ export default function ModalEditarMembresia({ abierto, cerrar, recargar, membre
         handleSubmit,
         reset,
         control,
+        watch,
         formState: { errors },
     } = useForm({
         resolver: yupResolver(esquema),
     });
 
+    const tipoConceptoSeleccionado = watch("tipoConcepto");
+
     useEffect(() => {
         if (membresia) {
             reset({
                 nombre: membresia.nombre,
+                tipoConcepto: membresia.tipoConcepto || "",
                 precio: membresia.precio,
-                duracionDias: membresia.duracionDias,
+                duracionDias: membresia.duracionDias || 0,
                 descripcion: membresia.descripcion || "",
-                activa: membresia.activa,
+                activo: membresia.activo,
             });
         }
     }, [membresia, reset]);
@@ -91,16 +112,22 @@ export default function ModalEditarMembresia({ abierto, cerrar, recargar, membre
         setGuardando(true);
 
         try {
-            // Incluir el slug en el body de la petición
+            // Incluir el slug en el body de la petición y ajustar duracionDias según el tipo
             const payload = {
                 slug: membresia.slug,
-                ...data
+                nombre: data.nombre,
+                tipoConcepto: data.tipoConcepto,
+                precio: data.precio,
+                duracionDias: data.tipoConcepto === "Mensualidad" ? data.duracionDias : 0,
+                descripcion: data.descripcion || null,
+                activo: data.activo,
             };
-            await api.put(`/membresias/${membresia.slug}`, payload);
+
+            await api.put(`/conceptos/${membresia.slug}`, payload);
 
             Swal.fire({
                 icon: "success",
-                title: "Membresía actualizada",
+                title: "Concepto actualizado",
                 text: "Los datos se actualizaron exitosamente",
                 confirmButtonColor: "#d32f2f",
             });
@@ -115,13 +142,13 @@ export default function ModalEditarMembresia({ abierto, cerrar, recargar, membre
             if (error.response) {
                 if (error.response.status === 400) {
                     mensajeError = "Datos inválidos";
-                    detalles = "Verifica que toda la información esté correcta";
+                    detalles = error.response.data?.message || "Verifica que toda la información esté correcta";
                 } else if (error.response.status === 404) {
-                    mensajeError = "Membresía no encontrada";
-                    detalles = "La membresía que intentas editar no existe";
+                    mensajeError = "Concepto no encontrado";
+                    detalles = "El concepto que intentas editar no existe";
                 } else {
                     mensajeError = "Error del servidor";
-                    detalles = "No se pudo actualizar la membresía. Intenta nuevamente.";
+                    detalles = "No se pudo actualizar el concepto. Intenta nuevamente.";
                 }
             } else if (error.request) {
                 mensajeError = "Sin conexión";
@@ -149,7 +176,7 @@ export default function ModalEditarMembresia({ abierto, cerrar, recargar, membre
             disableEscapeKeyDown={guardando}
         >
             <DialogTitle sx={{ color: "#d32f2f", fontWeight: "bold" }}>
-                Editar Membresía
+                Editar Concepto
             </DialogTitle>
             <form onSubmit={handleSubmit(onSubmit)}>
                 <DialogContent>
@@ -162,6 +189,37 @@ export default function ModalEditarMembresia({ abierto, cerrar, recargar, membre
                         margin="normal"
                         disabled={guardando}
                     />
+
+                    <FormControl
+                        fullWidth
+                        margin="normal"
+                        error={!!errors.tipoConcepto}
+                        disabled={guardando}
+                    >
+                        <InputLabel>Tipo de Concepto</InputLabel>
+                        <Controller
+                            name="tipoConcepto"
+                            control={control}
+                            render={({ field }) => (
+                                <Select {...field} label="Tipo de Concepto">
+                                    <MenuItem value="">
+                                        <em>Selecciona un tipo</em>
+                                    </MenuItem>
+                                    {tiposConcepto.map((tipo) => (
+                                        <MenuItem key={tipo.valor} value={tipo.valor}>
+                                            {tipo.etiqueta}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            )}
+                        />
+                        {errors.tipoConcepto && (
+                            <FormHelperText>
+                                {errors.tipoConcepto?.message}
+                            </FormHelperText>
+                        )}
+                    </FormControl>
+
                     <TextField
                         label="Precio"
                         type="number"
@@ -177,32 +235,39 @@ export default function ModalEditarMembresia({ abierto, cerrar, recargar, membre
                             ),
                         }}
                     />
-                    <FormControl
-                        fullWidth
-                        margin="normal"
-                        error={!!errors.duracionDias}
-                        disabled={guardando}
-                    >
-                        <InputLabel>Duración</InputLabel>
-                        <Controller
-                            name="duracionDias"
-                            control={control}
-                            render={({ field }) => (
-                                <Select {...field} label="Duración">
-                                    {duracionesPreestablecidas.map((duracion) => (
-                                        <MenuItem key={duracion.valor} value={duracion.valor}>
-                                            {duracion.etiqueta}
+
+                    {tipoConceptoSeleccionado === "Mensualidad" && (
+                        <FormControl
+                            fullWidth
+                            margin="normal"
+                            error={!!errors.duracionDias}
+                            disabled={guardando}
+                        >
+                            <InputLabel>Duración</InputLabel>
+                            <Controller
+                                name="duracionDias"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select {...field} label="Duración">
+                                        <MenuItem value="">
+                                            <em>Selecciona una duración</em>
                                         </MenuItem>
-                                    ))}
-                                </Select>
+                                        {duracionesPreestablecidas.map((duracion) => (
+                                            <MenuItem key={duracion.valor} value={duracion.valor}>
+                                                {duracion.etiqueta}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                )}
+                            />
+                            {errors.duracionDias && (
+                                <FormHelperText>
+                                    {errors.duracionDias?.message}
+                                </FormHelperText>
                             )}
-                        />
-                        {errors.duracionDias && (
-                            <FormHelperText>
-                                {errors.duracionDias?.message}
-                            </FormHelperText>
-                        )}
-                    </FormControl>
+                        </FormControl>
+                    )}
+
                     <TextField
                         label="Descripción (opcional)"
                         fullWidth
@@ -215,8 +280,8 @@ export default function ModalEditarMembresia({ abierto, cerrar, recargar, membre
                         disabled={guardando}
                     />
                     <FormControlLabel
-                        control={<Switch {...register("activa")} disabled={guardando} />}
-                        label="Activa"
+                        control={<Controller name="activo" control={control} render={({ field }) => <Switch {...field} checked={field.value} disabled={guardando} />} />}
+                        label="Activo"
                         sx={{ mt: 2 }}
                     />
                 </DialogContent>

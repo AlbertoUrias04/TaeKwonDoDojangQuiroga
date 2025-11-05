@@ -57,8 +57,35 @@ export default function ModalPasarLista({ abierto, cerrar, clase }) {
       const response = await obtenerAsistencias({ claseId: clase.id });
       const asistencias = response.data || response || [];
 
-      // Extraer fechas únicas y ordenarlas
-      const fechasUnicas = [...new Set(asistencias.map(a => a.fecha.split('T')[0]))];
+      // Mapeo de días en español a números de día de la semana (0 = Domingo, 1 = Lunes, etc.)
+      const diasSemana = {
+        'domingo': 0,
+        'lunes': 1,
+        'martes': 2,
+        'miércoles': 3,
+        'miercoles': 3, // Sin acento
+        'jueves': 4,
+        'viernes': 5,
+        'sábado': 6,
+        'sabado': 6 // Sin acento
+      };
+
+      // Obtener los días de la semana de esta clase
+      const diasClase = clase.dias
+        .toLowerCase()
+        .split(',')
+        .map(d => d.trim())
+        .map(d => diasSemana[d])
+        .filter(d => d !== undefined);
+
+      // Extraer fechas únicas y filtrar solo las que coincidan con los días de la clase
+      const fechasUnicas = [...new Set(asistencias.map(a => a.fecha.split('T')[0]))]
+        .filter(fechaStr => {
+          const fecha = new Date(fechaStr + 'T00:00:00');
+          const diaSemana = fecha.getDay();
+          return diasClase.includes(diaSemana);
+        });
+
       fechasUnicas.sort((a, b) => new Date(b) - new Date(a));
       setHistorialFechas(fechasUnicas.slice(0, 10)); // Solo las últimas 10
     } catch (error) {
