@@ -30,6 +30,7 @@ import Swal from "sweetalert2";
 import api from "../../services/api";
 import ModalCrearSocio from "../../Components/modals/ModalCrearSocio";
 import ModalEditarSocio from "../../Components/modals/ModalEditarSocio";
+import CintaChip from "../../Components/CintaChip";
 import "./Socios.css";
 
 export default function Socios() {
@@ -42,17 +43,6 @@ export default function Socios() {
   const [socioEditar, setSocioEditar] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
-
-  // Función para determinar si un color es claro u oscuro
-  const esColorClaro = (hexColor) => {
-    if (!hexColor) return false;
-    const hex = hexColor.replace('#', '');
-    const r = parseInt(hex.substr(0, 2), 16);
-    const g = parseInt(hex.substr(2, 2), 16);
-    const b = parseInt(hex.substr(4, 2), 16);
-    const brightness = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-    return brightness > 155;
-  };
 
   // Filtros avanzados
   const [filtroEstado, setFiltroEstado] = useState("");
@@ -512,19 +502,7 @@ export default function Socios() {
                       </TableCell>
                       <TableCell>{alumno.edad} años</TableCell>
                       <TableCell>
-                        {alumno.cintaActualNombre ? (
-                          <Chip
-                            label={alumno.cintaActualNombre}
-                            size="small"
-                            sx={{
-                              backgroundColor: alumno.cintaActualColor || "#666",
-                              color: esColorClaro(alumno.cintaActualColor) ? "#000" : "#fff",
-                              fontWeight: 600,
-                            }}
-                          />
-                        ) : (
-                          "Sin cinta"
-                        )}
+                        <CintaChip nombreCinta={alumno.cintaActualNombre} />
                       </TableCell>
                       <TableCell>
                         {alumno.claseNombre || "Sin clase"}

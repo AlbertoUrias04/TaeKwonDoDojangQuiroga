@@ -3,41 +3,44 @@
    Taekwondo Dojang Quiroga
    ============================================ */
 
-/* Backdrop del modal con blur */
+/* Backdrop del modal optimizado */
 .MuiBackdrop-root {
-  backdrop-filter: blur(8px) !important;
-  background-color: rgba(10, 10, 10, 0.7) !important;
+  backdrop-filter: blur(4px) !important;
+  background-color: rgba(10, 10, 10, 0.6) !important;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 /* Contenedor principal del modal */
 .modal-modern {
-  animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: modalSlideIn 0.25s ease-out;
 }
 
 @keyframes modalSlideIn {
   from {
     opacity: 0;
-    transform: translateY(-50px) scale(0.95);
+    transform: translate3d(0, -30px, 0) scale(0.97);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
 /* Paper del modal de MUI */
 .modal-modern .MuiDialog-paper {
-  border-radius: 20px !important;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.25),
-              0 0 0 1px rgba(220, 20, 60, 0.1) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2) !important;
   overflow: visible !important;
   max-width: 600px !important;
   width: 95% !important;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
-/* Header del modal con gradiente */
+/* Header del modal optimizado */
 .modal-header {
-  background: linear-gradient(135deg, #DC143C 0%, #B22222 50%, #8B0000 100%);
+  background: #C41E3A;
   color: white;
   padding: 24px 32px;
   display: flex;
@@ -45,29 +48,9 @@
   justify-content: space-between;
   position: relative;
   overflow: hidden;
-  border-radius: 20px 20px 0 0;
-}
-
-.modal-header::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
-  animation: modalPulse 4s ease-in-out infinite;
-}
-
-@keyframes modalPulse {
-  0%, 100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 0.5;
-  }
-  50% {
-    transform: scale(1.1) rotate(5deg);
-    opacity: 0.8;
-  }
+  border-radius: 16px 16px 0 0;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 /* Título del modal */
@@ -84,7 +67,6 @@
   font-size: 1.75rem;
   font-weight: 800;
   letter-spacing: -0.5px;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .modal-header-icon {
@@ -94,34 +76,34 @@
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
+  border-radius: 10px;
 }
 
-/* Botón de cerrar mejorado */
+/* Botón de cerrar optimizado */
 .modal-close-button {
   position: relative;
   z-index: 1;
   color: white !important;
   background: rgba(255, 255, 255, 0.1) !important;
-  backdrop-filter: blur(10px);
-  border-radius: 10px !important;
+  border-radius: 8px !important;
   width: 40px !important;
   height: 40px !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: background-color 0.2s ease, transform 0.2s ease !important;
 }
 
 .modal-close-button:hover {
   background: rgba(255, 255, 255, 0.2) !important;
-  transform: rotate(90deg) scale(1.1);
+  transform: scale(1.05);
 }
 
 /* Contenido del modal */
 .modal-content {
   padding: 32px;
-  background: linear-gradient(180deg, #FFFFFF 0%, #F8F9FA 100%);
+  background: #FFFFFF;
   max-height: 70vh;
   overflow-y: auto;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 /* Scrollbar personalizado en modales */
@@ -131,66 +113,46 @@
 
 .modal-content::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.05);
-  border-radius: 10px;
+  border-radius: 8px;
 }
 
 .modal-content::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #DC143C 0%, #B22222 100%);
-  border-radius: 10px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  background: #DC143C;
+  border-radius: 8px;
 }
 
 .modal-content::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #FF6B6B 0%, #DC143C 100%);
-  background-clip: padding-box;
+  background: #B22222;
 }
 
 /* Footer del modal */
 .modal-footer {
   padding: 20px 32px 32px;
-  background: linear-gradient(180deg, #F8F9FA 0%, #FFFFFF 100%);
+  background: #FFFFFF;
   display: flex;
   gap: 12px;
   justify-content: flex-end;
-  border-radius: 0 0 20px 20px;
+  border-radius: 0 0 16px 16px;
 }
 
 /* Botones del modal */
 .modal-button-primary {
-  background: linear-gradient(135deg, #DC143C 0%, #B22222 100%) !important;
+  background: #C41E3A !important;
   color: white !important;
   padding: 12px 28px !important;
-  border-radius: 12px !important;
+  border-radius: 10px !important;
   font-weight: 700 !important;
   font-size: 15px !important;
   letter-spacing: 0.5px !important;
   text-transform: none !important;
-  box-shadow: 0 4px 12px rgba(220, 20, 60, 0.3) !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  position: relative;
-  overflow: hidden;
-}
-
-.modal-button-primary::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.5s;
-}
-
-.modal-button-primary:hover::before {
-  left: 100%;
+  transition: background-color 0.2s ease, transform 0.2s ease !important;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 .modal-button-primary:hover {
-  background: linear-gradient(135deg, #FF6B6B 0%, #DC143C 100%) !important;
-  box-shadow: 0 6px 20px rgba(220, 20, 60, 0.4) !important;
-  transform: translateY(-2px);
+  background: #DC143C !important;
+  transform: translate3d(0, -2px, 0);
 }
 
 .modal-button-primary:disabled {
@@ -204,18 +166,17 @@
   color: #495057 !important;
   padding: 12px 28px !important;
   border: 2px solid #DEE2E6 !important;
-  border-radius: 12px !important;
+  border-radius: 10px !important;
   font-weight: 600 !important;
   font-size: 15px !important;
   text-transform: none !important;
-  transition: all 0.3s ease !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
 }
 
 .modal-button-secondary:hover {
   background: #F8F9FA !important;
   border-color: #DC143C !important;
   color: #DC143C !important;
-  transform: translateY(-2px);
 }
 
 /* Campos de formulario en modales */
@@ -224,8 +185,8 @@
 }
 
 .modal-content .MuiOutlinedInput-root {
-  border-radius: 12px;
-  transition: all 0.3s ease;
+  border-radius: 10px;
+  transition: border-color 0.2s ease;
 }
 
 .modal-content .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
@@ -235,7 +196,6 @@
 .modal-content .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
   border-color: #DC143C;
   border-width: 2px;
-  box-shadow: 0 0 0 4px rgba(220, 20, 60, 0.1);
 }
 
 .modal-content .MuiInputLabel-root.Mui-focused {
@@ -261,27 +221,17 @@
   border-radius: 12px;
 }
 
-/* Animación para elementos dentro del modal */
+/* Animación simplificada para elementos dentro del modal */
 .modal-content > * {
-  animation: modalContentFadeIn 0.5s ease forwards;
-  opacity: 0;
+  animation: modalContentFadeIn 0.3s ease forwards;
 }
-
-.modal-content > *:nth-child(1) { animation-delay: 0.1s; }
-.modal-content > *:nth-child(2) { animation-delay: 0.15s; }
-.modal-content > *:nth-child(3) { animation-delay: 0.2s; }
-.modal-content > *:nth-child(4) { animation-delay: 0.25s; }
-.modal-content > *:nth-child(5) { animation-delay: 0.3s; }
-.modal-content > *:nth-child(n+6) { animation-delay: 0.35s; }
 
 @keyframes modalContentFadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 

@@ -1,18 +1,46 @@
 .clases-container {
   padding: 30px;
   min-height: 100vh;
-  animation: fadeIn 0.5s ease;
+  animation: fadeIn 0.3s ease;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
+}
+
+/* Tabla responsive con scroll horizontal */
+.clases-container .MuiTableContainer-root {
+  overflow-x: auto !important;
+  max-width: 100%;
+}
+
+.clases-container .MuiTable-root {
+  min-width: 1000px;
+}
+
+.clases-container .MuiTableCell-root {
+  white-space: nowrap;
+}
+
+.clases-container .MuiTableCell-root:last-child {
+  position: sticky;
+  right: 0;
+  background: white;
+  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.05);
+  z-index: 1;
+  min-width: 400px;
+}
+
+.clases-container .MuiTableHead-root .MuiTableCell-root:last-child {
+  background: #0A0A0A;
+  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.1);
 }
 
 .page-title {

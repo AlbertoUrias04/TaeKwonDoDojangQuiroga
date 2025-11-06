@@ -1,0 +1,107 @@
+/* Estilos para chips de cintas de Taekwondo */
+.cinta-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+  min-width: 120px;
+  height: 24px;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+/* Cintas base (sin línea) */
+.cinta-blanca {
+  background: #FFFFFF;
+  color: #333;
+  border: 2px solid #BDBDBD;
+  font-weight: 700;
+}
+
+.cinta-amarilla {
+  background: #FFD700;
+  color: #2C2C2C;
+  font-weight: 700;
+}
+
+.cinta-verde {
+  background: #228B22;
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+.cinta-azul {
+  background: #1E90FF;
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+.cinta-roja {
+  background: #DC143C;
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+.cinta-negra {
+  background: #000000;
+  color: #FFD700;
+  border: 2px solid #FFD700;
+  font-weight: 700;
+}
+
+/* Cintas avanzadas (con línea en medio) */
+.cinta-blanca-avanzada {
+  background: linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 40%, #FFD700 40%, #FFD700 60%, #FFFFFF 60%, #FFFFFF 100%);
+  color: #333;
+  border: 2px solid #BDBDBD;
+  font-weight: 700;
+}
+
+.cinta-amarilla-avanzada {
+  background: linear-gradient(to bottom, #FFD700 0%, #FFD700 40%, #228B22 40%, #228B22 60%, #FFD700 60%, #FFD700 100%);
+  color: #2C2C2C;
+  font-weight: 700;
+}
+
+.cinta-verde-avanzada {
+  background: linear-gradient(to bottom, #228B22 0%, #228B22 40%, #1E90FF 40%, #1E90FF 60%, #228B22 60%, #228B22 100%);
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+.cinta-azul-avanzada {
+  background: linear-gradient(to bottom, #1E90FF 0%, #1E90FF 40%, #DC143C 40%, #DC143C 60%, #1E90FF 60%, #1E90FF 100%);
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+.cinta-roja-avanzada {
+  background: linear-gradient(to bottom, #DC143C 0%, #DC143C 40%, #000000 40%, #000000 60%, #DC143C 60%, #DC143C 100%);
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+/* Cintas Poom (mitad negro arriba, mitad rojo abajo) */
+.cinta-poom-1,
+.cinta-poom-2,
+.cinta-poom-3,
+.cinta-poom-4 {
+  background: linear-gradient(to bottom, #000000 0%, #000000 50%, #DC143C 50%, #DC143C 100%);
+  color: #FFD700;
+  border: 2px solid #FFD700;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Sin cinta */
+.cinta-sin-cinta {
+  background: #9E9E9E;
+  color: #FFFFFF;
+  border: 2px dashed #757575;
+  font-weight: 700;
+}

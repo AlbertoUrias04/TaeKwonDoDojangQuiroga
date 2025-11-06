@@ -13,12 +13,12 @@ import {
   Paper,
   CircularProgress,
   Alert,
-  Chip,
   Box,
   Typography,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import api from "../../services/api";
+import CintaChip from "../CintaChip";
 
 export default function ModalVerAlumnosClase({ abierto, cerrar, clase }) {
   const [alumnos, setAlumnos] = useState([]);
@@ -52,17 +52,6 @@ export default function ModalVerAlumnosClase({ abierto, cerrar, clase }) {
       setAlumnos([]);
       setError(null);
     }, 300);
-  };
-
-  // Función para determinar si un color es claro u oscuro
-  const esColorClaro = (hexColor) => {
-    if (!hexColor) return false;
-    const hex = hexColor.replace("#", "");
-    const r = parseInt(hex.substr(0, 2), 16);
-    const g = parseInt(hex.substr(2, 2), 16);
-    const b = parseInt(hex.substr(4, 2), 16);
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    return brightness > 155;
   };
 
   return (
@@ -125,21 +114,7 @@ export default function ModalVerAlumnosClase({ abierto, cerrar, clase }) {
                     </TableCell>
                     <TableCell>{alumno.edad} años</TableCell>
                     <TableCell>
-                      {alumno.cintaActualNombre ? (
-                        <Chip
-                          label={alumno.cintaActualNombre}
-                          size="small"
-                          sx={{
-                            backgroundColor: alumno.cintaActualColor || "#666",
-                            color: esColorClaro(alumno.cintaActualColor)
-                              ? "#000"
-                              : "#fff",
-                            fontWeight: 600,
-                          }}
-                        />
-                      ) : (
-                        "Sin cinta"
-                      )}
+                      <CintaChip nombreCinta={alumno.cintaActualNombre} />
                     </TableCell>
                     <TableCell>{alumno.telefonoTutor}</TableCell>
                   </TableRow>
