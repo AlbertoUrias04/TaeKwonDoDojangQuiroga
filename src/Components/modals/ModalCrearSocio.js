@@ -1,8 +1,4 @@
 import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
     Button,
     TextField,
     FormControl,
@@ -14,12 +10,14 @@ import {
     Box,
     Typography,
 } from "@mui/material";
+import { PersonAdd } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Swal from "sweetalert2";
 import api from "../../services/api";
+import ModernModal from "./ModernModal";
 
 const esquema = yup.object().shape({
     nombre: yup
@@ -203,21 +201,37 @@ export default function ModalCrearSocio({ abierto, cerrar, recargar }) {
     };
 
     return (
-        <Dialog
+        <ModernModal
             open={abierto}
             onClose={handleClose}
+            title="Nuevo Alumno"
+            icon={<PersonAdd />}
             maxWidth="md"
-            fullWidth
-            disableEscapeKeyDown={guardando}
+            actions={
+                <>
+                    <Button
+                        onClick={handleClose}
+                        className="modal-button-secondary"
+                        disabled={guardando}
+                    >
+                        Cancelar
+                    </Button>
+                    <Button
+                        type="submit"
+                        form="form-crear-socio"
+                        className="modal-button-primary"
+                        disabled={guardando}
+                        startIcon={guardando && <CircularProgress size={20} />}
+                    >
+                        {guardando ? "Guardando..." : "Guardar"}
+                    </Button>
+                </>
+            }
         >
-            <DialogTitle sx={{ color: "#d32f2f", fontWeight: "bold" }}>
-                Nuevo Alumno
-            </DialogTitle>
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <DialogContent>
-                    <Typography variant="subtitle2" sx={{ mb: 2, color: "#666", fontWeight: "bold" }}>
-                        Datos del Alumno
-                    </Typography>
+            <form id="form-crear-socio" onSubmit={handleSubmit(onSubmit)}>
+                <Typography variant="subtitle2" sx={{ mb: 2, color: "#666", fontWeight: "bold" }}>
+                    Datos del Alumno
+                </Typography>
                     <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
                         <TextField
                             label="Nombre"
@@ -376,27 +390,7 @@ export default function ModalCrearSocio({ abierto, cerrar, recargar }) {
                             />
                         </FormControl>
                     </Box>
-                </DialogContent>
-                <DialogActions sx={{ p: 2 }}>
-                    <Button onClick={handleClose} variant="outlined" disabled={guardando}>
-                        Cancelar
-                    </Button>
-                    <Button
-                        type="submit"
-                        variant="contained"
-                        disabled={guardando}
-                        startIcon={guardando && <CircularProgress size={20} />}
-                        sx={{
-                            backgroundColor: "#d32f2f",
-                            "&:hover": {
-                                backgroundColor: "#b71c1c",
-                            },
-                        }}
-                    >
-                        {guardando ? "Guardando..." : "Guardar"}
-                    </Button>
-                </DialogActions>
             </form>
-        </Dialog>
+        </ModernModal>
     );
 }

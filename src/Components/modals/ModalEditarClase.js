@@ -1,8 +1,4 @@
 import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
     Button,
     TextField,
     FormControl,
@@ -16,12 +12,14 @@ import {
     Chip,
     Typography,
 } from "@mui/material";
+import { Edit } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Swal from "sweetalert2";
 import { actualizarClase } from "../../services/clasesService";
+import ModernModal from "./ModernModal";
 
 const esquema = yup.object().shape({
     nombre: yup
@@ -169,18 +167,34 @@ export default function ModalEditarClase({ abierto, cerrar, recargar, clase }) {
     };
 
     return (
-        <Dialog
+        <ModernModal
             open={abierto}
             onClose={handleClose}
+            title="Editar Clase"
+            icon={<Edit />}
             maxWidth="sm"
-            fullWidth
-            disableEscapeKeyDown={guardando}
+            actions={
+                <>
+                    <Button
+                        onClick={handleClose}
+                        className="modal-button-secondary"
+                        disabled={guardando}
+                    >
+                        Cancelar
+                    </Button>
+                    <Button
+                        type="submit"
+                        form="form-editar-clase"
+                        className="modal-button-primary"
+                        disabled={guardando}
+                        startIcon={guardando && <CircularProgress size={20} />}
+                    >
+                        {guardando ? "Guardando..." : "Guardar"}
+                    </Button>
+                </>
+            }
         >
-            <DialogTitle sx={{ color: "#d32f2f", fontWeight: "bold" }}>
-                Editar Clase
-            </DialogTitle>
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <DialogContent>
+            <form id="form-editar-clase" onSubmit={handleSubmit(onSubmit)}>
                     <TextField
                         label="Nombre de la Clase"
                         fullWidth
@@ -278,27 +292,7 @@ export default function ModalEditarClase({ abierto, cerrar, recargar, clase }) {
                         label="Activo"
                         sx={{ mt: 2 }}
                     />
-                </DialogContent>
-                <DialogActions sx={{ p: 2 }}>
-                    <Button onClick={handleClose} variant="outlined" disabled={guardando}>
-                        Cancelar
-                    </Button>
-                    <Button
-                        type="submit"
-                        variant="contained"
-                        disabled={guardando}
-                        startIcon={guardando && <CircularProgress size={20} />}
-                        sx={{
-                            backgroundColor: "#d32f2f",
-                            "&:hover": {
-                                backgroundColor: "#b71c1c",
-                            },
-                        }}
-                    >
-                        {guardando ? "Guardando..." : "Guardar"}
-                    </Button>
-                </DialogActions>
             </form>
-        </Dialog>
+        </ModernModal>
     );
 }

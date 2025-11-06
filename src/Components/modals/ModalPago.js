@@ -1,8 +1,4 @@
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   TextField,
   FormControl,
@@ -14,6 +10,7 @@ import {
   InputAdornment,
   Chip,
 } from "@mui/material";
+import { Payment } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -21,6 +18,7 @@ import * as yup from "yup";
 import Swal from "sweetalert2";
 import api from "../../services/api";
 import { registrarPago } from "../../services/pagosService";
+import ModernModal from "./ModernModal";
 
 const esquema = yup.object().shape({
   alumnoId: yup
@@ -188,18 +186,34 @@ export default function ModalPago({ abierto, cerrar, recargar }) {
   };
 
   return (
-    <Dialog
+    <ModernModal
       open={abierto}
       onClose={handleClose}
+      title="Registrar Pago"
+      icon={<Payment />}
       maxWidth="sm"
-      fullWidth
-      disableEscapeKeyDown={guardando}
+      actions={
+        <>
+          <Button
+            onClick={handleClose}
+            className="modal-button-secondary"
+            disabled={guardando}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            form="form-pago"
+            className="modal-button-primary"
+            disabled={guardando}
+            startIcon={guardando && <CircularProgress size={20} />}
+          >
+            {guardando ? "Registrando..." : "Registrar Pago"}
+          </Button>
+        </>
+      }
     >
-      <DialogTitle sx={{ color: "#d32f2f", fontWeight: "bold" }}>
-        Registrar Pago
-      </DialogTitle>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <DialogContent>
+      <form id="form-pago" onSubmit={handleSubmit(onSubmit)}>
           <FormControl
             fullWidth
             margin="normal"
@@ -341,27 +355,7 @@ export default function ModalPago({ abierto, cerrar, recargar }) {
             margin="normal"
             disabled={guardando}
           />
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={handleClose} variant="outlined" disabled={guardando}>
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={guardando}
-            startIcon={guardando && <CircularProgress size={20} />}
-            sx={{
-              backgroundColor: "#d32f2f",
-              "&:hover": {
-                backgroundColor: "#b71c1c",
-              },
-            }}
-          >
-            {guardando ? "Registrando..." : "Registrar Pago"}
-          </Button>
-        </DialogActions>
       </form>
-    </Dialog>
+    </ModernModal>
   );
 }

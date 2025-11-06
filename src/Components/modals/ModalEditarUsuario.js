@@ -1,8 +1,4 @@
 import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
     Button,
     TextField,
     FormControlLabel,
@@ -11,13 +7,14 @@ import {
     InputAdornment,
     IconButton,
 } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff, Edit } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Swal from "sweetalert2";
 import api from "../../services/api";
+import ModernModal from "./ModernModal";
 
 const esquema = yup.object().shape({
     nombre: yup
@@ -152,18 +149,34 @@ export default function ModalEditarUsuario({ abierto, onClose, usuario, onActual
     };
 
     return (
-        <Dialog 
-            open={abierto} 
+        <ModernModal
+            open={abierto}
             onClose={handleClose}
+            title="Editar Usuario"
+            icon={<Edit />}
             maxWidth="sm"
-            fullWidth
-            disableEscapeKeyDown={guardando}
+            actions={
+                <>
+                    <Button
+                        onClick={handleClose}
+                        className="modal-button-secondary"
+                        disabled={guardando}
+                    >
+                        Cancelar
+                    </Button>
+                    <Button
+                        type="submit"
+                        form="form-editar-usuario"
+                        className="modal-button-primary"
+                        disabled={guardando}
+                        startIcon={guardando && <CircularProgress size={20} />}
+                    >
+                        {guardando ? "Guardando..." : "Guardar"}
+                    </Button>
+                </>
+            }
         >
-            <DialogTitle sx={{ color: "#d32f2f", fontWeight: "bold" }}>
-                Editar Usuario
-            </DialogTitle>
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <DialogContent>
+            <form id="form-editar-usuario" onSubmit={handleSubmit(onSubmit)}>
                     <TextField 
                         label="Nombre" 
                         fullWidth
@@ -229,31 +242,7 @@ export default function ModalEditarUsuario({ abierto, onClose, usuario, onActual
                         label="Habilitado"
                         sx={{ mt: 1 }}
                     />
-                </DialogContent>
-                <DialogActions sx={{ p: 2 }}>
-                    <Button
-                        onClick={handleClose}
-                        variant="outlined"
-                        disabled={guardando}
-                    >
-                        Cancelar
-                    </Button>
-                    <Button
-                        type="submit"
-                        variant="contained"
-                        disabled={guardando}
-                        startIcon={guardando && <CircularProgress size={20} />}
-                        sx={{
-                            backgroundColor: "#d32f2f",
-                            "&:hover": {
-                                backgroundColor: "#b71c1c",
-                            },
-                        }}
-                    >
-                        {guardando ? "Guardando..." : "Guardar"}
-                    </Button>
-                </DialogActions>
             </form>
-        </Dialog>
+        </ModernModal>
     );
 }

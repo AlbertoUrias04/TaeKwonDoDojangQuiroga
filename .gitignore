@@ -57,3 +57,6 @@ artifacts/
 appsettings.json
 appsettings.*.json
 !appsettings.example.json
+Api/appsettings.Development.json
+Api/appsettings.Development.json
+Api/appsettings.Development.json

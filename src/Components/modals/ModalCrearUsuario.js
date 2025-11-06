@@ -1,8 +1,4 @@
 import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
     Button,
     TextField,
     FormControlLabel,
@@ -11,13 +7,14 @@ import {
     InputAdornment,
     IconButton,
 } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff, PersonAdd } from "@mui/icons-material";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import Swal from "sweetalert2";
 import api from "../../services/api";
+import ModernModal from "./ModernModal";
 
 const esquema = yup.object().shape({
     nombre: yup
@@ -119,18 +116,34 @@ export default function ModalCrearUsuario({ abierto, onClose, onGuardado }) {
     };
 
     return (
-        <Dialog 
-            open={abierto} 
-            onClose={handleClose} 
-            maxWidth="sm" 
-            fullWidth
-            disableEscapeKeyDown={guardando}
+        <ModernModal
+            open={abierto}
+            onClose={handleClose}
+            title="Nuevo Usuario"
+            icon={<PersonAdd />}
+            maxWidth="sm"
+            actions={
+                <>
+                    <Button
+                        onClick={handleClose}
+                        className="modal-button-secondary"
+                        disabled={guardando}
+                    >
+                        Cancelar
+                    </Button>
+                    <Button
+                        type="submit"
+                        form="form-crear-usuario"
+                        className="modal-button-primary"
+                        disabled={guardando}
+                        startIcon={guardando && <CircularProgress size={20} />}
+                    >
+                        {guardando ? "Guardando..." : "Guardar"}
+                    </Button>
+                </>
+            }
         >
-            <DialogTitle sx={{ color: "#d32f2f", fontWeight: "bold" }}>
-                Nuevo Usuario
-            </DialogTitle>
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <DialogContent>
+            <form id="form-crear-usuario" onSubmit={handleSubmit(onSubmit)}>
                     <TextField
                         label="Nombre"
                         fullWidth
@@ -196,31 +209,7 @@ export default function ModalCrearUsuario({ abierto, onClose, onGuardado }) {
                         label="Habilitado"
                         sx={{ mt: 1 }}
                     />
-                </DialogContent>
-                <DialogActions sx={{ p: 2 }}>
-                    <Button
-                        onClick={handleClose}
-                        variant="outlined"
-                        disabled={guardando}
-                    >
-                        Cancelar
-                    </Button>
-                    <Button
-                        type="submit"
-                        variant="contained"
-                        disabled={guardando}
-                        startIcon={guardando && <CircularProgress size={20} />}
-                        sx={{
-                            backgroundColor: "#d32f2f",
-                            "&:hover": {
-                                backgroundColor: "#b71c1c",
-                            },
-                        }}
-                    >
-                        {guardando ? "Guardando..." : "Guardar"}
-                    </Button>
-                </DialogActions>
             </form>
-        </Dialog>
+        </ModernModal>
     );
 }

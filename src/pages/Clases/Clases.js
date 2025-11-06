@@ -177,9 +177,16 @@ export default function Clases() {
           startIcon={<Add />}
           onClick={() => setModalAbierto(true)}
           sx={{
-            backgroundColor: "#d32f2f",
+            background: "linear-gradient(135deg, #DC143C 0%, #B22222 100%)",
+            boxShadow: "0 4px 12px rgba(220, 20, 60, 0.3)",
+            fontWeight: 700,
+            padding: "10px 24px",
+            borderRadius: "12px",
+            transition: "all 0.3s ease",
             "&:hover": {
-              backgroundColor: "#b71c1c",
+              background: "linear-gradient(135deg, #FF6B6B 0%, #DC143C 100%)",
+              boxShadow: "0 6px 20px rgba(220, 20, 60, 0.4)",
+              transform: "translateY(-2px)",
             },
           }}
         >
@@ -224,30 +231,51 @@ export default function Clases() {
         </Box>
       ) : (
         <>
-          <TableContainer component={Paper} elevation={3}>
+          <TableContainer
+            component={Paper}
+            elevation={0}
+            sx={{
+              borderRadius: "16px",
+              overflow: "hidden",
+              boxShadow: "0 4px 20px rgba(0, 0, 0, 0.08)",
+              border: "1px solid rgba(220, 20, 60, 0.1)",
+            }}
+          >
             <Table>
               <TableHead>
-                <TableRow sx={{ backgroundColor: "#d32f2f" }}>
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                <TableRow sx={{
+                  background: "linear-gradient(135deg, #1A1A1A 0%, #0A0A0A 100%)",
+                  position: "relative",
+                  "&::after": {
+                    content: '""',
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: "3px",
+                    background: "linear-gradient(90deg, #DC143C 0%, #B22222 50%, #8B0000 100%)",
+                  }
+                }}>
+                  <TableCell sx={{ color: "white", fontWeight: 800, fontSize: "0.95rem", letterSpacing: "0.5px" }}>
                     Nombre
                   </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                  <TableCell sx={{ color: "white", fontWeight: 800, fontSize: "0.95rem", letterSpacing: "0.5px" }}>
                     Días
                   </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                  <TableCell sx={{ color: "white", fontWeight: 800, fontSize: "0.95rem", letterSpacing: "0.5px" }}>
                     Horario
                   </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                  <TableCell sx={{ color: "white", fontWeight: 800, fontSize: "0.95rem", letterSpacing: "0.5px" }}>
                     Cupo
                   </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                  <TableCell sx={{ color: "white", fontWeight: 800, fontSize: "0.95rem", letterSpacing: "0.5px" }}>
                     Tipo
                   </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                  <TableCell sx={{ color: "white", fontWeight: 800, fontSize: "0.95rem", letterSpacing: "0.5px" }}>
                     Estado
                   </TableCell>
                   <TableCell
-                    sx={{ color: "white", fontWeight: "bold" }}
+                    sx={{ color: "white", fontWeight: 800, fontSize: "0.95rem", letterSpacing: "0.5px" }}
                     align="center"
                   >
                     Acciones
@@ -263,7 +291,17 @@ export default function Clases() {
                   </TableRow>
                 ) : (
                   datosPaginados.map((clase) => (
-                    <TableRow key={clase.slug} hover>
+                    <TableRow
+                      key={clase.slug}
+                      hover
+                      sx={{
+                        transition: "all 0.2s ease",
+                        "&:hover": {
+                          backgroundColor: "rgba(220, 20, 60, 0.04)",
+                          transform: "scale(1.001)",
+                        }
+                      }}
+                    >
                       <TableCell>{clase.nombre}</TableCell>
                       <TableCell>{clase.dias}</TableCell>
                       <TableCell>
@@ -338,7 +376,25 @@ export default function Clases() {
                 count={totalPaginas}
                 page={pagina}
                 onChange={(_, value) => setPagina(value)}
-                color="primary"
+                sx={{
+                  "& .MuiPaginationItem-root": {
+                    fontWeight: 600,
+                    fontSize: "1rem",
+                    borderRadius: "10px",
+                    transition: "all 0.3s ease",
+                  },
+                  "& .MuiPaginationItem-root.Mui-selected": {
+                    background: "linear-gradient(135deg, #DC143C 0%, #B22222 100%)",
+                    color: "white",
+                    boxShadow: "0 4px 12px rgba(220, 20, 60, 0.3)",
+                    "&:hover": {
+                      background: "linear-gradient(135deg, #FF6B6B 0%, #DC143C 100%)",
+                    },
+                  },
+                  "& .MuiPaginationItem-root:hover": {
+                    backgroundColor: "rgba(220, 20, 60, 0.1)",
+                  }
+                }}
               />
             </Box>
           )}
