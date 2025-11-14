@@ -9,6 +9,7 @@ import {
   CircularProgress,
   InputAdornment,
   Chip,
+  Autocomplete,
 } from "@mui/material";
 import { Payment } from "@mui/icons-material";
 import { useState, useEffect } from "react";
@@ -23,14 +24,17 @@ import ModernModal from "./ModernModal";
 const esquema = yup.object().shape({
   alumnoId: yup
     .number()
+    .typeError("Selecciona un alumno válido")
     .required("El alumno es obligatorio")
     .positive("Selecciona un alumno"),
   conceptoId: yup
     .number()
+    .typeError("Selecciona un concepto válido")
     .required("El concepto es obligatorio")
     .positive("Selecciona un concepto"),
   monto: yup
     .number()
+    .typeError("El monto debe ser un número válido")
     .required("El monto es obligatorio")
     .positive("El monto debe ser positivo")
     .min(1, "El monto debe ser mayor a 0"),
@@ -214,41 +218,48 @@ export default function ModalPago({ abierto, cerrar, recargar }) {
       }
     >
       <form id="form-pago" onSubmit={handleSubmit(onSubmit)}>
-          <FormControl
-            fullWidth
-            margin="normal"
-            error={!!errors.alumnoId}
-            disabled={guardando}
-          >
-            <InputLabel>Alumno</InputLabel>
-            <Controller
-              name="alumnoId"
-              control={control}
-              render={({ field }) => (
-                <Select {...field} label="Alumno">
-                  <MenuItem value="">
-                    <em>Selecciona un alumno</em>
-                  </MenuItem>
-                  {alumnos.map((alumno) => (
-                    <MenuItem key={alumno.id} value={alumno.id}>
-                      {alumno.nombre} {alumno.apellidoPaterno}{" "}
-                      {alumno.apellidoMaterno}
-                      {alumno.cintaActual && (
-                        <Chip
-                          label={alumno.cintaActual}
-                          size="small"
-                          sx={{ ml: 1 }}
-                        />
+          <Controller
+            name="alumnoId"
+            control={control}
+            render={({ field: { onChange, value } }) => (
+              <Autocomplete
+                options={alumnos}
+                getOptionLabel={(option) =>
+                  `${option.nombre} ${option.apellidoPaterno} ${option.apellidoMaterno}`
+                }
+                value={alumnos.find((a) => a.id === value) || null}
+                onChange={(_, newValue) => {
+                  onChange(newValue ? newValue.id : "");
+                }}
+                disabled={guardando}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Alumno"
+                    margin="normal"
+                    error={!!errors.alumnoId}
+                    helperText={errors.alumnoId?.message}
+                    placeholder="Buscar alumno..."
+                  />
+                )}
+                renderOption={(props, option) => (
+                  <li {...props} key={option.id}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span>
+                        {option.nombre} {option.apellidoPaterno}{" "}
+                        {option.apellidoMaterno}
+                      </span>
+                      {option.cintaActual && (
+                        <Chip label={option.cintaActual} size="small" />
                       )}
-                    </MenuItem>
-                  ))}
-                </Select>
-              )}
-            />
-            {errors.alumnoId && (
-              <FormHelperText>{errors.alumnoId?.message}</FormHelperText>
+                    </div>
+                  </li>
+                )}
+                noOptionsText="No se encontraron alumnos"
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+              />
             )}
-          </FormControl>
+          />
 
           <FormControl
             fullWidth

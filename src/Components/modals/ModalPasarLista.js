@@ -1,8 +1,4 @@
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   Table,
   TableBody,
@@ -18,16 +14,16 @@ import {
   Typography,
   TextField,
   Chip,
-  Divider,
   List,
   ListItem,
   ListItemText,
-  Snackbar,
 } from "@mui/material";
+import { CheckCircle, CalendarToday } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import api from "../../services/api";
 import { registrarAsistenciasMasivas, obtenerAsistencias } from "../../services/asistenciasService";
+import ModernModal from "./ModernModal";
 
 export default function ModalPasarLista({ abierto, cerrar, clase }) {
   const [alumnos, setAlumnos] = useState([]);
@@ -37,7 +33,6 @@ export default function ModalPasarLista({ abierto, cerrar, clase }) {
   const [cargando, setCargando] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState(null);
-  const [mensajeExito, setMensajeExito] = useState(false);
 
   useEffect(() => {
     if (abierto && clase) {
@@ -151,11 +146,21 @@ export default function ModalPasarLista({ abierto, cerrar, clase }) {
 
       await registrarAsistenciasMasivas(payload);
 
-      // Recargar historial primero
+      // Recargar historial de fechas
       await cargarHistorialFechas();
 
-      // Mostrar mensaje de éxito discreto
-      setMensajeExito(true);
+      // Mostrar mensaje de éxito con z-index alto para aparecer sobre el modal
+      Swal.fire({
+        icon: "success",
+        title: "Asistencias guardadas",
+        text: `Se registraron las asistencias exitosamente para el ${formatearFecha(fecha)}`,
+        confirmButtonColor: "#DC143C",
+        timer: 3000,
+        showConfirmButton: true,
+        customClass: {
+          container: 'swal-on-top'
+        }
+      });
     } catch (error) {
       let mensajeError = "No se pudieron guardar las asistencias";
 
@@ -215,23 +220,66 @@ export default function ModalPasarLista({ abierto, cerrar, clase }) {
 
   return (
     <>
-      <Dialog open={abierto} onClose={handleClose} maxWidth="lg" fullWidth>
-        <DialogTitle sx={{ color: "#d32f2f", fontWeight: "bold" }}>
-          Pasar Lista: {clase?.nombre}
-        </DialogTitle>
-      <DialogContent>
-        <Box sx={{ display: "flex", gap: 2 }}>
+      <ModernModal
+        open={abierto}
+        onClose={handleClose}
+        title={`Pasar Lista: ${clase?.nombre || ''}`}
+        icon={<CheckCircle />}
+        maxWidth="xl"
+        actions={
+          <>
+            <Button
+              onClick={handleClose}
+              className="modal-button-secondary"
+              disabled={guardando}
+            >
+              Cancelar
+            </Button>
+            {alumnos.length > 0 && (
+              <Button
+                onClick={handleGuardar}
+                className="modal-button-primary"
+                disabled={guardando || cargando}
+                startIcon={guardando && <CircularProgress size={20} />}
+              >
+                {guardando ? "Guardando..." : "Guardar Asistencias"}
+              </Button>
+            )}
+          </>
+        }
+      >
+        <Box sx={{ display: "flex", gap: 3 }}>
           {/* Panel izquierdo - Historial */}
-          <Box sx={{ width: "250px", borderRight: "1px solid #e0e0e0", pr: 2 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: "bold", color: "#666" }}>
-              Historial de Lista
-            </Typography>
+          <Box
+            sx={{
+              width: "280px",
+              borderRight: "2px solid rgba(220, 20, 60, 0.1)",
+              pr: 3
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+              <CalendarToday sx={{ color: "#DC143C", fontSize: 20 }} />
+              <Typography
+                variant="subtitle2"
+                sx={{ fontWeight: "bold", color: "#333", fontSize: "0.95rem" }}
+              >
+                Historial de Lista
+              </Typography>
+            </Box>
             {historialFechas.length === 0 ? (
-              <Alert severity="info" sx={{ fontSize: "0.8rem" }}>
+              <Alert
+                severity="info"
+                sx={{
+                  fontSize: "0.85rem",
+                  borderRadius: "12px",
+                  backgroundColor: "#E3F2FD",
+                  color: "#1976D2"
+                }}
+              >
                 No hay registros previos
               </Alert>
             ) : (
-              <List dense sx={{ maxHeight: 400, overflow: "auto" }}>
+              <List dense sx={{ maxHeight: 450, overflow: "auto" }}>
                 {historialFechas.map((fechaHistorial) => (
                   <ListItem
                     key={fechaHistorial}
@@ -239,20 +287,41 @@ export default function ModalPasarLista({ abierto, cerrar, clase }) {
                     selected={fechaHistorial === fecha}
                     onClick={() => handleSeleccionarFecha(fechaHistorial)}
                     sx={{
-                      borderRadius: 1,
-                      mb: 0.5,
-                      backgroundColor: fechaHistorial === fecha ? "#ffebee" : "transparent",
+                      borderRadius: "12px",
+                      mb: 1,
+                      backgroundColor: fechaHistorial === fecha
+                        ? "linear-gradient(135deg, rgba(220, 20, 60, 0.1) 0%, rgba(220, 20, 60, 0.05) 100%)"
+                        : "transparent",
+                      border: fechaHistorial === fecha ? "2px solid #DC143C" : "2px solid transparent",
+                      transition: "all 0.3s ease",
                       "&:hover": {
-                        backgroundColor: fechaHistorial === fecha ? "#ffcdd2" : "#f5f5f5"
+                        backgroundColor: fechaHistorial === fecha
+                          ? "rgba(220, 20, 60, 0.15)"
+                          : "rgba(220, 20, 60, 0.05)",
+                        transform: "translateX(4px)"
                       }
                     }}
                   >
                     <ListItemText
                       primary={formatearFecha(fechaHistorial)}
-                      primaryTypographyProps={{ fontSize: "0.85rem" }}
+                      primaryTypographyProps={{
+                        fontSize: "0.9rem",
+                        fontWeight: fechaHistorial === fecha ? 600 : 400,
+                        color: fechaHistorial === fecha ? "#DC143C" : "#495057"
+                      }}
                     />
                     {fechaHistorial === fecha && (
-                      <Chip label="Actual" size="small" color="error" sx={{ height: 20, fontSize: "0.7rem" }} />
+                      <Chip
+                        label="Actual"
+                        size="small"
+                        sx={{
+                          height: 22,
+                          fontSize: "0.7rem",
+                          fontWeight: 700,
+                          background: "linear-gradient(135deg, #DC143C 0%, #B22222 100%)",
+                          color: "white"
+                        }}
+                      />
                     )}
                   </ListItem>
                 ))}
@@ -263,45 +332,93 @@ export default function ModalPasarLista({ abierto, cerrar, clase }) {
           {/* Panel derecho - Lista actual */}
           <Box sx={{ flex: 1 }}>
             {clase && (
-              <Box sx={{ mb: 2, p: 2, backgroundColor: "#f5f5f5", borderRadius: 1 }}>
-                <Typography variant="body2">
+              <Box
+                sx={{
+                  mb: 3,
+                  p: 3,
+                  background: "linear-gradient(135deg, #F8F9FA 0%, #FFFFFF 100%)",
+                  borderRadius: "16px",
+                  border: "2px solid rgba(220, 20, 60, 0.1)",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)"
+                }}
+              >
+                <Typography variant="body2" sx={{ mb: 1, color: "#495057" }}>
                   <strong>Horario:</strong> {clase.dias} de {clase.horaInicio} a {clase.horaFin}
                 </Typography>
-                <Typography variant="body2">
+                <Typography variant="body2" sx={{ mb: 2, color: "#495057" }}>
                   <strong>Tipo:</strong> {clase.tipoClase}
                 </Typography>
-                <Box sx={{ mt: 1 }}>
-                  <TextField
-                    label="Fecha"
-                    type="date"
-                    value={fecha}
-                    onChange={(e) => setFecha(e.target.value)}
-                    size="small"
-                    InputLabelProps={{ shrink: true }}
-                    disabled={guardando}
-                    fullWidth
-                  />
-                </Box>
+                <TextField
+                  label="Fecha"
+                  type="date"
+                  value={fecha}
+                  onChange={(e) => setFecha(e.target.value)}
+                  size="small"
+                  InputLabelProps={{ shrink: true }}
+                  disabled={guardando}
+                  fullWidth
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: "12px"
+                    }
+                  }}
+                />
               </Box>
             )}
 
             {!cargando && alumnos.length > 0 && (
-              <Box sx={{ mb: 2, display: "flex", gap: 2, justifyContent: "center" }}>
-                <Box sx={{ textAlign: "center", p: 1, backgroundColor: "#e8f5e9", borderRadius: 1, minWidth: 100 }}>
-                  <Typography variant="caption" color="text.secondary">Presentes</Typography>
-                  <Typography variant="h5" sx={{ color: "#388e3c", fontWeight: "bold" }}>
+              <Box sx={{ mb: 3, display: "flex", gap: 2, justifyContent: "center" }}>
+                <Box
+                  sx={{
+                    textAlign: "center",
+                    p: 2,
+                    background: "linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)",
+                    borderRadius: "16px",
+                    minWidth: 120,
+                    boxShadow: "0 4px 12px rgba(56, 142, 60, 0.2)",
+                    border: "2px solid #81C784"
+                  }}
+                >
+                  <Typography variant="caption" sx={{ color: "#388E3C", fontWeight: 600 }}>
+                    Presentes
+                  </Typography>
+                  <Typography variant="h4" sx={{ color: "#2E7D32", fontWeight: 800, mt: 0.5 }}>
                     {contarPresentes()}
                   </Typography>
                 </Box>
-                <Box sx={{ textAlign: "center", p: 1, backgroundColor: "#ffebee", borderRadius: 1, minWidth: 100 }}>
-                  <Typography variant="caption" color="text.secondary">Ausentes</Typography>
-                  <Typography variant="h5" sx={{ color: "#d32f2f", fontWeight: "bold" }}>
+                <Box
+                  sx={{
+                    textAlign: "center",
+                    p: 2,
+                    background: "linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%)",
+                    borderRadius: "16px",
+                    minWidth: 120,
+                    boxShadow: "0 4px 12px rgba(211, 47, 47, 0.2)",
+                    border: "2px solid #EF9A9A"
+                  }}
+                >
+                  <Typography variant="caption" sx={{ color: "#D32F2F", fontWeight: 600 }}>
+                    Ausentes
+                  </Typography>
+                  <Typography variant="h4" sx={{ color: "#C62828", fontWeight: 800, mt: 0.5 }}>
                     {contarAusentes()}
                   </Typography>
                 </Box>
-                <Box sx={{ textAlign: "center", p: 1, backgroundColor: "#e3f2fd", borderRadius: 1, minWidth: 100 }}>
-                  <Typography variant="caption" color="text.secondary">Total</Typography>
-                  <Typography variant="h5" sx={{ color: "#1976d2", fontWeight: "bold" }}>
+                <Box
+                  sx={{
+                    textAlign: "center",
+                    p: 2,
+                    background: "linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)",
+                    borderRadius: "16px",
+                    minWidth: 120,
+                    boxShadow: "0 4px 12px rgba(25, 118, 210, 0.2)",
+                    border: "2px solid #90CAF9"
+                  }}
+                >
+                  <Typography variant="caption" sx={{ color: "#1976D2", fontWeight: 600 }}>
+                    Total
+                  </Typography>
+                  <Typography variant="h4" sx={{ color: "#1565C0", fontWeight: 800, mt: 0.5 }}>
                     {alumnos.length}
                   </Typography>
                 </Box>
@@ -310,26 +427,60 @@ export default function ModalPasarLista({ abierto, cerrar, clase }) {
 
             {cargando ? (
               <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-                <CircularProgress />
+                <CircularProgress sx={{ color: "#DC143C" }} />
               </Box>
             ) : error ? (
-              <Alert severity="error">{error}</Alert>
+              <Alert severity="error" sx={{ borderRadius: "12px" }}>{error}</Alert>
             ) : alumnos.length === 0 ? (
-              <Alert severity="info">
+              <Alert severity="info" sx={{ borderRadius: "12px" }}>
                 No hay alumnos inscritos en esta clase
               </Alert>
             ) : (
-              <TableContainer component={Paper} elevation={2}>
+              <TableContainer
+                component={Paper}
+                elevation={0}
+                sx={{
+                  borderRadius: "16px",
+                  border: "2px solid rgba(220, 20, 60, 0.1)",
+                  overflow: "hidden"
+                }}
+              >
                 <Table size="small">
                   <TableHead>
-                    <TableRow sx={{ backgroundColor: "#d32f2f" }}>
-                      <TableCell sx={{ color: "white", fontWeight: "bold", width: "80px" }}>
+                    <TableRow
+                      sx={{
+                        background: "linear-gradient(135deg, #DC143C 0%, #B22222 100%)"
+                      }}
+                    >
+                      <TableCell
+                        sx={{
+                          color: "white",
+                          fontWeight: 700,
+                          width: "100px",
+                          fontSize: "0.9rem",
+                          letterSpacing: "0.5px"
+                        }}
+                      >
                         Presente
                       </TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                      <TableCell
+                        sx={{
+                          color: "white",
+                          fontWeight: 700,
+                          fontSize: "0.9rem",
+                          letterSpacing: "0.5px"
+                        }}
+                      >
                         Nombre
                       </TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: "bold" }}>
+                      <TableCell
+                        sx={{
+                          color: "white",
+                          fontWeight: 700,
+                          fontSize: "0.9rem",
+                          letterSpacing: "0.5px"
+                        }}
+                      >
                         Edad
                       </TableCell>
                     </TableRow>
@@ -342,21 +493,43 @@ export default function ModalPasarLista({ abierto, cerrar, clase }) {
                           key={alumno.id}
                           hover
                           sx={{
-                            backgroundColor: presente ? "#e8f5e9" : asistencias[alumno.id] === false ? "#ffebee" : "inherit"
+                            backgroundColor: presente
+                              ? "rgba(56, 142, 60, 0.08)"
+                              : asistencias[alumno.id] === false
+                                ? "rgba(211, 47, 47, 0.08)"
+                                : "inherit",
+                            transition: "all 0.2s ease",
+                            "&:hover": {
+                              backgroundColor: presente
+                                ? "rgba(56, 142, 60, 0.15)"
+                                : asistencias[alumno.id] === false
+                                  ? "rgba(211, 47, 47, 0.15)"
+                                  : "rgba(220, 20, 60, 0.05)"
+                            }
                           }}
                         >
                           <TableCell>
                             <Checkbox
                               checked={presente}
                               onChange={() => handleToggleAsistencia(alumno.id)}
-                              color="success"
                               disabled={guardando}
+                              sx={{
+                                color: "#DC143C",
+                                "&.Mui-checked": {
+                                  color: "#388E3C"
+                                },
+                                "&:hover": {
+                                  backgroundColor: "rgba(220, 20, 60, 0.1)"
+                                }
+                              }}
                             />
                           </TableCell>
-                          <TableCell>
+                          <TableCell sx={{ fontWeight: 500, color: "#333" }}>
                             {alumno.nombre} {alumno.apellidoPaterno} {alumno.apellidoMaterno}
                           </TableCell>
-                          <TableCell>{alumno.edad} años</TableCell>
+                          <TableCell sx={{ color: "#666" }}>
+                            {alumno.edad} años
+                          </TableCell>
                         </TableRow>
                       );
                     })}
@@ -366,45 +539,7 @@ export default function ModalPasarLista({ abierto, cerrar, clase }) {
             )}
           </Box>
         </Box>
-      </DialogContent>
-      <DialogActions sx={{ p: 2 }}>
-        <Button onClick={handleClose} variant="outlined" disabled={guardando}>
-          Cancelar
-        </Button>
-        {alumnos.length > 0 && (
-          <Button
-            onClick={handleGuardar}
-            variant="contained"
-            disabled={guardando || cargando}
-            startIcon={guardando && <CircularProgress size={20} />}
-            sx={{
-              backgroundColor: "#d32f2f",
-              "&:hover": {
-                backgroundColor: "#b71c1c",
-              },
-            }}
-          >
-            {guardando ? "Guardando..." : "Guardar Asistencias"}
-          </Button>
-        )}
-      </DialogActions>
-      </Dialog>
-
-      <Snackbar
-        open={mensajeExito}
-        autoHideDuration={3000}
-        onClose={() => setMensajeExito(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert
-          onClose={() => setMensajeExito(false)}
-          severity="success"
-          sx={{ width: '100%' }}
-          variant="filled"
-        >
-          Asistencias guardadas exitosamente
-        </Alert>
-      </Snackbar>
+      </ModernModal>
     </>
   );
 }

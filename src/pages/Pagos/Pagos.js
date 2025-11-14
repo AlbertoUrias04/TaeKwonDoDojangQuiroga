@@ -24,7 +24,7 @@ import {
   Typography,
   Grid,
 } from "@mui/material";
-import { Search, Clear, PaymentRounded, AttachMoney, TrendingUp } from "@mui/icons-material";
+import { Search, Clear, PaymentRounded, AttachMoney, TrendingUp, CalendarToday } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { obtenerPagos, eliminarPago, obtenerEstadisticasPagos } from "../../services/pagosService";
@@ -35,6 +35,8 @@ export default function Pagos() {
   const [pagos, setPagos] = useState([]);
   const [filtro, setFiltro] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("");
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaFin, setFechaFin] = useState("");
   const [pagina, setPagina] = useState(1);
   const [filtrados, setFiltrados] = useState([]);
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -94,15 +96,35 @@ export default function Pagos() {
   }, [pagos]);
 
   useEffect(() => {
-    const datosFiltrados = pagos.filter((p) =>
+    let datosFiltrados = pagos.filter((p) =>
       [p.alumnoNombre, p.conceptoNombre, p.metodoPago, p.referencia]
         .join(" ")
         .toLowerCase()
         .includes(filtro.toLowerCase())
     );
+
+    // Filtrar por rango de fechas
+    if (fechaInicio) {
+      const inicio = new Date(fechaInicio);
+      inicio.setHours(0, 0, 0, 0);
+      datosFiltrados = datosFiltrados.filter((p) => {
+        const fechaPago = new Date(p.fecha);
+        return fechaPago >= inicio;
+      });
+    }
+
+    if (fechaFin) {
+      const fin = new Date(fechaFin);
+      fin.setHours(23, 59, 59, 999);
+      datosFiltrados = datosFiltrados.filter((p) => {
+        const fechaPago = new Date(p.fecha);
+        return fechaPago <= fin;
+      });
+    }
+
     setFiltrados(datosFiltrados);
     setPagina(1);
-  }, [filtro, pagos]);
+  }, [filtro, pagos, fechaInicio, fechaFin]);
 
   const indiceInicio = (pagina - 1) * itemsPorPagina;
   const indiceFin = indiceInicio + itemsPorPagina;
@@ -267,7 +289,7 @@ export default function Pagos() {
         </Grid>
       )}
 
-      <Box sx={{ mb: 2, display: "flex", gap: 2, flexWrap: "wrap" }}>
+      <Box sx={{ mb: 2, display: "flex", gap: 2, flexWrap: "wrap", alignItems: "center" }}>
         <TextField
           placeholder="Buscar por alumno, concepto o referencia..."
           variant="outlined"
@@ -291,6 +313,54 @@ export default function Pagos() {
           }}
         />
 
+        <TextField
+          label="Fecha Inicio"
+          type="date"
+          size="small"
+          sx={{ minWidth: 160 }}
+          value={fechaInicio}
+          onChange={(e) => setFechaInicio(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <CalendarToday fontSize="small" />
+              </InputAdornment>
+            ),
+            endAdornment: fechaInicio && (
+              <InputAdornment position="end">
+                <IconButton onClick={() => setFechaInicio("")} edge="end" size="small">
+                  <Clear fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+
+        <TextField
+          label="Fecha Fin"
+          type="date"
+          size="small"
+          sx={{ minWidth: 160 }}
+          value={fechaFin}
+          onChange={(e) => setFechaFin(e.target.value)}
+          InputLabelProps={{ shrink: true }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <CalendarToday fontSize="small" />
+              </InputAdornment>
+            ),
+            endAdornment: fechaFin && (
+              <InputAdornment position="end">
+                <IconButton onClick={() => setFechaFin("")} edge="end" size="small">
+                  <Clear fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+
         <FormControl size="small" sx={{ minWidth: 150 }}>
           <InputLabel>Estado</InputLabel>
           <Select
@@ -304,6 +374,30 @@ export default function Pagos() {
             <MenuItem value="Rechazado">Rechazado</MenuItem>
           </Select>
         </FormControl>
+
+        {(filtro || fechaInicio || fechaFin || estadoFiltro) && (
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => {
+              setFiltro("");
+              setFechaInicio("");
+              setFechaFin("");
+              setEstadoFiltro("");
+            }}
+            startIcon={<Clear />}
+            sx={{
+              borderColor: "#d32f2f",
+              color: "#d32f2f",
+              "&:hover": {
+                borderColor: "#b71c1c",
+                backgroundColor: "rgba(211, 47, 47, 0.04)",
+              },
+            }}
+          >
+            Limpiar Filtros
+          </Button>
+        )}
       </Box>
 
       {error && (

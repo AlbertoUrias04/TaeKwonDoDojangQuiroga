@@ -8,7 +8,8 @@ export const obtenerAsistencias = async (filtros = {}) => {
   if (filtros.fecha) params.append('fecha', filtros.fecha);
 
   const response = await api.get(`/asistencias?${params.toString()}`);
-  return response.data;
+  // El backend devuelve { success, data, message }, necesitamos acceder a .data
+  return response.data?.data || response.data || [];
 };
 
 export const obtenerAsistenciaPorId = async (id) => {

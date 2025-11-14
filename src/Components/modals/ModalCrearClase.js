@@ -39,7 +39,8 @@ const esquema = yup.object().shape({
         .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Formato de hora inválido (HH:MM)"),
     cupoMaximo: yup
         .number()
-        .required("El cupo máximo es obligatorio")
+        .nullable()
+        .transform((value, originalValue) => (originalValue === "" ? null : value))
         .positive("El cupo debe ser mayor a 0")
         .integer("El cupo debe ser un número entero")
         .min(1, "El cupo mínimo es 1")

@@ -1,8 +1,4 @@
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   Table,
   TableBody,
@@ -16,9 +12,11 @@ import {
   Box,
   Typography,
 } from "@mui/material";
+import { Group } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import api from "../../services/api";
 import CintaChip from "../CintaChip";
+import ModernModal from "./ModernModal";
 
 export default function ModalVerAlumnosClase({ abierto, cerrar, clase }) {
   const [alumnos, setAlumnos] = useState([]);
@@ -34,12 +32,11 @@ export default function ModalVerAlumnosClase({ abierto, cerrar, clase }) {
   const cargarAlumnos = async () => {
     setCargando(true);
     setError(null);
-
     try {
       const res = await api.get(`/alumnos?claseId=${clase.id}&activo=true`);
       setAlumnos(res.data || []);
-    } catch (error) {
-      setError("No se pudieron cargar los alumnos de esta clase");
+    } catch (err) {
+      setError("No se pudieron cargar los alumnos de esta clase.");
     } finally {
       setCargando(false);
     }
@@ -55,80 +52,147 @@ export default function ModalVerAlumnosClase({ abierto, cerrar, clase }) {
   };
 
   return (
-    <Dialog open={abierto} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle sx={{ color: "#d32f2f", fontWeight: "bold" }}>
-        Alumnos de la clase: {clase?.nombre}
-      </DialogTitle>
-      <DialogContent>
-        {clase && (
-          <Box sx={{ mb: 2, p: 2, backgroundColor: "#f5f5f5", borderRadius: 1 }}>
-            <Typography variant="body2">
-              <strong>Horario:</strong> {clase.dias} de {clase.horaInicio} a{" "}
-              {clase.horaFin}
-            </Typography>
-            <Typography variant="body2">
-              <strong>Tipo:</strong> {clase.tipoClase}
-            </Typography>
-            <Typography variant="body2">
-              <strong>Cupo:</strong> {alumnos.length} /{" "}
-              {clase.cupoMaximo || "Sin límite"}
-            </Typography>
-          </Box>
-        )}
-
-        {cargando ? (
-          <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : error ? (
-          <Alert severity="error">{error}</Alert>
-        ) : alumnos.length === 0 ? (
-          <Alert severity="info">
-            No hay alumnos inscritos en esta clase
-          </Alert>
-        ) : (
-          <TableContainer component={Paper} elevation={2}>
-            <Table size="small">
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#d32f2f" }}>
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                    Nombre
-                  </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                    Edad
-                  </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                    Cinta Actual
-                  </TableCell>
-                  <TableCell sx={{ color: "white", fontWeight: "bold" }}>
-                    Teléfono Tutor
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {alumnos.map((alumno) => (
-                  <TableRow key={alumno.id} hover>
-                    <TableCell>
-                      {alumno.nombre} {alumno.apellidoPaterno}{" "}
-                      {alumno.apellidoMaterno}
-                    </TableCell>
-                    <TableCell>{alumno.edad} años</TableCell>
-                    <TableCell>
-                      <CintaChip nombreCinta={alumno.cintaActualNombre} />
-                    </TableCell>
-                    <TableCell>{alumno.telefonoTutor}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
-      </DialogContent>
-      <DialogActions sx={{ p: 2 }}>
-        <Button onClick={handleClose} variant="outlined">
+    <ModernModal
+      open={abierto}
+      onClose={handleClose}
+      title={`Alumnos de la clase: ${clase?.nombre || ''}`}
+      icon={<Group />}
+      maxWidth="lg"
+      actions={
+        <Button
+          onClick={handleClose}
+          className="modal-button-secondary"
+        >
           Cerrar
         </Button>
-      </DialogActions>
-    </Dialog>
+      }
+    >
+      {clase && (
+        <Box
+          sx={{
+            mb: 3,
+            p: 3,
+            background: "linear-gradient(135deg, #F8F9FA 0%, #FFFFFF 100%)",
+            borderRadius: "16px",
+            border: "2px solid rgba(220, 20, 60, 0.1)",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)"
+          }}
+        >
+          <Typography variant="body2" sx={{ mb: 1, color: "#495057" }}>
+            <strong>Horario:</strong> {clase.dias} de {clase.horaInicio} a {clase.horaFin}
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 1, color: "#495057" }}>
+            <strong>Tipo:</strong> {clase.tipoClase}
+          </Typography>
+          <Typography variant="body2" sx={{ color: "#495057" }}>
+            <strong>Total de alumnos:</strong> {alumnos.length}
+          </Typography>
+        </Box>
+      )}
+
+      {cargando ? (
+        <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
+          <CircularProgress sx={{ color: "#DC143C" }} />
+        </Box>
+      ) : error ? (
+        <Alert severity="error" sx={{ borderRadius: "12px" }}>
+          {error}
+        </Alert>
+      ) : alumnos.length === 0 ? (
+        <Alert severity="info" sx={{ borderRadius: "12px" }}>
+          No hay alumnos inscritos en esta clase
+        </Alert>
+      ) : (
+        <TableContainer
+          component={Paper}
+          elevation={0}
+          sx={{
+            borderRadius: "16px",
+            border: "2px solid rgba(220, 20, 60, 0.1)",
+            overflow: "hidden"
+          }}
+        >
+          <Table size="small">
+            <TableHead>
+              <TableRow
+                sx={{
+                  background: "linear-gradient(135deg, #DC143C 0%, #B22222 100%)"
+                }}
+              >
+                <TableCell
+                  sx={{
+                    color: "white",
+                    fontWeight: 700,
+                    fontSize: "0.9rem",
+                    letterSpacing: "0.5px"
+                  }}
+                >
+                  Nombre
+                </TableCell>
+                <TableCell
+                  sx={{
+                    color: "white",
+                    fontWeight: 700,
+                    fontSize: "0.9rem",
+                    letterSpacing: "0.5px"
+                  }}
+                >
+                  Edad
+                </TableCell>
+                <TableCell
+                  sx={{
+                    color: "white",
+                    fontWeight: 700,
+                    fontSize: "0.9rem",
+                    letterSpacing: "0.5px"
+                  }}
+                >
+                  Cinta
+                </TableCell>
+                <TableCell
+                  sx={{
+                    color: "white",
+                    fontWeight: 700,
+                    fontSize: "0.9rem",
+                    letterSpacing: "0.5px"
+                  }}
+                >
+                  Teléfono Tutor
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {alumnos.map((alumno, index) => (
+                <TableRow
+                  key={alumno.id}
+                  hover
+                  sx={{
+                    backgroundColor: index % 2 === 0 ? "rgba(248, 249, 250, 0.5)" : "white",
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                      backgroundColor: "rgba(220, 20, 60, 0.05)",
+                      transform: "scale(1.005)"
+                    }
+                  }}
+                >
+                  <TableCell sx={{ fontWeight: 500, color: "#333" }}>
+                    {alumno.nombre} {alumno.apellidoPaterno} {alumno.apellidoMaterno}
+                  </TableCell>
+                  <TableCell sx={{ color: "#666" }}>
+                    {alumno.edad} años
+                  </TableCell>
+                  <TableCell>
+                    <CintaChip nombreCinta={alumno.cintaActualNombre} />
+                  </TableCell>
+                  <TableCell sx={{ color: "#666", fontFamily: "monospace" }}>
+                    {alumno.telefonoTutor}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+    </ModernModal>
   );
 }
